@@ -21,3 +21,6 @@ print(f"Client Object in Flashcards: {flashcards.client}")
 print("\nGenerating content from AIFlashcards...")
 generated_text = flashcards.generate_content()
 print("\nGenerated Content:\n", generated_text)
+
+ai_features.delete_all_files()
+flashcards.delete_all_files()
