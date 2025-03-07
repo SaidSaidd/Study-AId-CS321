@@ -1,7 +1,6 @@
 from abc import ABC
 from pathlib import Path
 from google import genai
-from pathlib import Path
 
 class AIFeatures(ABC):
     def __init__(self, api_key):
@@ -28,7 +27,7 @@ class AIFeatures(ABC):
         uploaded_file = self.upload_file()
         #create prompt (file and text prompt
         #TODO: Prompt Engineering (more in subclasses)
-        prompt = [uploaded_file, "\n\n", "Generate a detailed summary of the document."]
+        prompt = [uploaded_file, "\n\n", "Generate a brief summary of the file."]
         result = self.client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
         print(f"\nGenerated content:\n{result.text}")
         return result.text
