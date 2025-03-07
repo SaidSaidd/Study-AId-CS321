@@ -50,13 +50,12 @@ class AIFeatures(ABC):
                 print(f"Deleted file: {file.name}")
             except Exception as e:
                 print(f"Failed to delete file: {file.name}. Error: {e}")
-
+        
 # Example usage:
 if __name__ == "__main__":
 
     #add api key
-    api_key = '' 
-  
+    api_key = 'AIzaSyCFP_xnzpKf8FBn7Nl1cqOU682IicQykLg' 
     ai_features = AIFeatures(api_key=api_key)
     ai_features.set_file("") #set file path during testing. Generate_content will not work unless file path is specified.
     ai_features.generate_content()
