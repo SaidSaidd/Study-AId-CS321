@@ -21,7 +21,7 @@ class AIFlashcards(AIFeatures):
         return result.text 
     
     def create_dict(self, generated_content):
-        result_dict = {}
+        self.result_dict = {}
     
         pattern = r'(?m)^(?P<num>\d+):\s*(?P<word>.*?)\s*-\s*(?P<definition>.*?)(?=\n\d+:|\Z)'
         
@@ -30,6 +30,12 @@ class AIFlashcards(AIFeatures):
             num = match.group("num").strip()
             word = match.group("word").strip()
             definition = match.group("definition").strip()
-            result_dict[num] = {"word": word, "definition": definition}
+            self.result_dict[num] = {"word": word, "definition": definition}
         
-        return result_dict
+        return self.result_dict
+
+    def get_word(self, word_and_def):
+        return word_and_def.get("word", "").strip()
+
+    def get_def(self, word_and_def):
+        return word_and_def.get("definition", "").strip()

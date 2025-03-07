@@ -17,8 +17,9 @@ flashcards = AIFlashcards(ai_features)
 generated_text = flashcards.generate_content()
 flashcards_dict = flashcards.create_dict(generated_text)
 
-for key, value in flashcards_dict.items():
-    print(f"{key}: {value['word']} - {value['definition']}")
+print(flashcards.get_word(flashcards_dict["2"]) + " - " + flashcards.get_def(flashcards_dict["2"]))
+#for key, value in flashcards_dict.items():
+#    print(f"{key}: {value['word']} - {value['definition']}")
 #print("\nGenerated Content:\n", generated_text)
 
 #delete files every time.
