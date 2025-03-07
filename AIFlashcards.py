@@ -2,6 +2,7 @@ from abc import ABC
 from pathlib import Path
 from google import genai
 from AIFeatures import AIFeatures
+import re    
 
 class AIFlashcards(AIFeatures):
     def __init__(self, aiFeatures):
@@ -13,7 +14,28 @@ class AIFlashcards(AIFeatures):
         # upload file
         uploaded_file = self.upload_file()
         #create prompt (file and text prompt)
-        #TODO: Prompt Engineering (more in subclasses)
-        prompt = [uploaded_file, "\n\n", "Find key words in the files and provide definitions for them. Read the whole file and identify as many key words as possible. For each word, write to output as follows 1: word - definition. Do not include any text other than that. Provide more detailed definitions than provided in the file."]
+        #TODO: Prompt Engineering 
+        prompt = [uploaded_file, "\n\n", "You are given the text content extracted from a PDF file. Your task is to: 1. Identify as many key words in the text as you can. 2. For each key word, provide a detailed definition that includes relevant context—even if that context is not explicitly mentioned in the PDF.3. Output your results as a numbered list, strictly following this format:1: Word - Definition. Make sure that the output contains only the numbered list and nothing else. Do not include any additional commentary, explanations, or formatting."]
+
         result = self.client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
         return result.text 
+    
+    def create_dict(self, generated_content):
+        self.result_dict = {}
+    
+        pattern = r'(?m)^(?P<num>\d+):\s*(?P<word>.*?)\s*-\s*(?P<definition>.*?)(?=\n\d+:|\Z)'
+        
+        matches = re.finditer(pattern, generated_content)
+        for match in matches:
+            num = match.group("num").strip()
+            word = match.group("word").strip()
+            definition = match.group("definition").strip()
+            self.result_dict[num] = {"word": word, "definition": definition}
+        
+        return self.result_dict
+
+    def get_word(self, word_and_def):
+        return word_and_def.get("word", "").strip()
+
+    def get_def(self, word_and_def):
+        return word_and_def.get("definition", "").strip()
