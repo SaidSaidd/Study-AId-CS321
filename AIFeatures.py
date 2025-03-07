@@ -5,6 +5,7 @@ from google import genai
 class AIFeatures(ABC):
     def __init__(self, api_key):
         self.file_path = None
+        self.api_key = api_key
         self.client = genai.Client(api_key=api_key)
     
     def set_file(self, file_path):
