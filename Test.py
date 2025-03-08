@@ -1,3 +1,4 @@
+import pytest
 from AIFeatures import AIFeatures
 from AIFlashcards import AIFlashcards
 from AISummary import AISummary
@@ -49,29 +50,25 @@ print("\nGenerated Content:\n", generated_text)
 #delete files every time.'
 '''
 
-def test_set_file_valid_pdf():
-    ai_features = AIFeatures(API_KEY,"/Users/chocalmonds/test/test.pdf")
-    ai_features.set_file("/Users/chocalmonds/test/test.pdf")
-    print(f"Test passed: {ai_features.file_path}")
-
-def test_set_file_valid_txt():
-    ai_features = AIFeatures(API_KEY,"/Users/chocalmonds/test/test.txt")
-    ai_features.set_file("/Users/chocalmonds/test/test.txt")
-    print(f"Test passed: {ai_features.file_path}")
-
 def test_set_file_invalid_py():
-    try:
-        ai_features = AIFeatures(API_KEY,"/Users/chocalmonds/test/test.py")
+    with pytest.raises(ValueError, match="Only PDF and TXT files are allowed."):
+        ai_features = AIFeatures(API_KEY, "/Users/chocalmonds/test/test.py")
         ai_features.set_file("/Users/chocalmonds/test/test.py")
-    except ValueError as e:
-        print(f"Test passed: {str(e)}")
 
 def test_set_file_invalid_docx():
-    try:
-        ai_features = AIFeatures(API_KEY,"/Users/chocalmonds/test/test.docx")
+    with pytest.raises(ValueError, match="Only PDF and TXT files are allowed."):
+        ai_features = AIFeatures(API_KEY, "/Users/chocalmonds/test/test.docx")
         ai_features.set_file("/Users/chocalmonds/test/test.docx")
-    except ValueError as e:
-        print(f"Test passed: {str(e)}")
+
+def test_set_file_valid_pdf():
+    ai_features = AIFeatures(API_KEY, "/Users/chocalmonds/test/test.pdf")
+    ai_features.set_file("/Users/chocalmonds/test/test.pdf")
+    assert str(ai_features.file_path) == "/Users/chocalmonds/test/test.pdf"
+
+def test_set_file_valid_txt():
+    ai_features = AIFeatures(API_KEY, "/Users/chocalmonds/test/test.txt")
+    ai_features.set_file("/Users/chocalmonds/test/test.txt")
+    assert str(ai_features.file_path) == "/Users/chocalmonds/test/test.txt"
 
 test_set_file_invalid_py()
 test_set_file_invalid_docx()
