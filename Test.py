@@ -7,7 +7,7 @@ from AIQuestions import AIQuestions
 API_KEY = 'AIzaSyCFP_xnzpKf8FBn7Nl1cqOU682IicQykLg'
 
 # Create an instance of AIFeatures
-ai_features = AIFeatures(API_KEY,"C:/Users/gill_/Desktop/notes2.pdf")
+ai_features = AIFeatures(API_KEY,"/Users/chocalmonds/test/test.txt")
 #print(ai_features.uploaded_file)
 flashcards = AIFlashcards(ai_features)
 summary = AISummary(ai_features)
@@ -48,4 +48,34 @@ print("\nGenerated Content:\n", generated_text)
 
 #delete files every time.'
 '''
+
+def test_set_file_valid_pdf():
+    ai_features = AIFeatures(API_KEY,"/Users/chocalmonds/test/test.pdf")
+    ai_features.set_file("/Users/chocalmonds/test/test.pdf")
+    print(f"Test passed: {ai_features.file_path}")
+
+def test_set_file_valid_txt():
+    ai_features = AIFeatures(API_KEY,"/Users/chocalmonds/test/test.txt")
+    ai_features.set_file("/Users/chocalmonds/test/test.txt")
+    print(f"Test passed: {ai_features.file_path}")
+
+def test_set_file_invalid_py():
+    try:
+        ai_features = AIFeatures(API_KEY,"/Users/chocalmonds/test/test.py")
+        ai_features.set_file("/Users/chocalmonds/test/test.py")
+    except ValueError as e:
+        print(f"Test passed: {str(e)}")
+
+def test_set_file_invalid_docx():
+    try:
+        ai_features = AIFeatures(API_KEY,"/Users/chocalmonds/test/test.docx")
+        ai_features.set_file("/Users/chocalmonds/test/test.docx")
+    except ValueError as e:
+        print(f"Test passed: {str(e)}")
+
+test_set_file_invalid_py()
+test_set_file_invalid_docx()
+test_set_file_valid_pdf()
+test_set_file_valid_txt()
+
 ai_features.delete_all_files()
