@@ -26,7 +26,47 @@ for question in parsed_questions:
     print(f"d. {question['options']['d']}")
     print() 
 
+def test_flashcards(api_key, file_path):
+    # Create an instance of AIFeatures
+    ai_features = AIFeatures(api_key, file_path)
+    
+    # Create an instance of AIFlashcards using the AIFeatures instance
+    flashcards = AIFlashcards(ai_features)
+    
+    # Generate content (flashcards)
+    generated_text = flashcards.generate_content()
+    
+    # Parse the generated content into a dictionary
+    flashcards_dict = flashcards.create_dict(generated_text)
+    
+    # Print the flashcards
+    for key, value in flashcards_dict.items():
+        print(f"{key}: {value['word']} - {value['definition']}")
+    
+    # Clean up by deleting all files
+    ai_features.delete_all_files()
 
+def test_summary(api_key, file_path):
+    # Create an instance of AIFeatures
+    ai_features = AIFeatures(api_key, file_path)
+    
+    # Create an instance of AISummary using the AIFeatures instance
+    summary = AISummary(ai_features)
+    
+    # Generate content (summary)
+    generated_text = summary.generate_content()
+    
+    # Print the summary
+    print("Generated Summary:\n", generated_text)
+    
+    # Clean up by deleting all files
+    ai_features.delete_all_files()
+
+if __name__ == "__main__":
+    print("TESTING FLASHCARDS")
+    test_flashcards(API_KEY, "C:/Users/gill_/Desktop/notes2.pdf")
+    print("TESTING SUMMARY")
+    test_summary(API_KEY, "C:/Users/gill_/Desktop/notes2.pdf")
 
 # Set a file path (ensure this file exists)
 #ai_features.set_file("C:/Users/gill_/Desktop/notes.pdf")  # Replace with a valid file path
