@@ -10,4 +10,5 @@ class AISummary(AIFeatures):
         self.prompt = """Provide a detailed summary of the file provided. 
                          Split the summary into subsections and make sure all important information from the file is included in the summary. 
                          Try not defining to many topics. Instead, focus on giving a detialed overview of the contents of the file."
-"""
+                      """
+        self.uploaded_file = aiFeatures.uploaded_file

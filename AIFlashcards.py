@@ -16,6 +16,8 @@ class AIFlashcards(AIFeatures):
                           Make sure that the output contains only the numbered list and nothing else. 
                           Do not include any additional commentary, explanations, or formatting."
                       """
+        self.uploaded_file = aiFeatures.uploaded_file
+        
     def create_dict(self, generated_content):
         self.result_dict = {}
     

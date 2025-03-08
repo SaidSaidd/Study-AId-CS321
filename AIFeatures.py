@@ -3,11 +3,13 @@ from pathlib import Path
 from google import genai
 
 class AIFeatures(ABC):
-    def __init__(self, api_key):
+    def __init__(self, api_key, file_path):
         self.file_path = None
         self.api_key = api_key
         self.client = genai.Client(api_key=api_key)
         self.prompt = "Generate a brief summary of the file."
+        self.set_file(file_path)
+        self.uploaded_file = self.upload_file()
     
     def set_file(self, file_path):
         # Check if the file is a pdf or txt file. Gemini is not compatible with all file types.
@@ -21,15 +23,14 @@ class AIFeatures(ABC):
             raise ValueError("File path is not set. Call set_file() first.")
             
         uploaded_file = self.client.files.upload(file=self.file_path)
-        print(f"Uploaded file: {uploaded_file}")
+        #print(f"Uploaded file: {uploaded_file}")
         return uploaded_file
     
     def generate_content(self):
         # Upload the file and then include it in the prompt
-        uploaded_file = self.upload_file()
         #create prompt (file and text prompt
         #TODO: Prompt Engineering (more in subclasses)
-        prompt = [uploaded_file, "\n\n", self.prompt]
+        prompt = [self.uploaded_file, "\n\n", self.prompt]
         result = self.client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
         return result.text
 
