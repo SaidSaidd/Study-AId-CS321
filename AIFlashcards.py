@@ -8,17 +8,14 @@ class AIFlashcards(AIFeatures):
         # take attributes from already initialized aiFeatures variables.
         self.file_path = aiFeatures.file_path
         self.client = aiFeatures.client  
-
-    def generate_content(self):
-        # upload file
-        uploaded_file = self.upload_file()
-        #create prompt (file and text prompt)
-        #TODO: Prompt Engineering 
-        prompt = [uploaded_file, "\n\n", "You are given the text content extracted from a PDF file. Your task is to: 1. Identify as many key words in the text as you can. 2. For each key word, provide a detailed definition that includes relevant context—even if that context is not explicitly mentioned in the PDF.3. Output your results as a numbered list, strictly following this format:1: Word - Definition. Make sure that the output contains only the numbered list and nothing else. Do not include any additional commentary, explanations, or formatting."]
-
-        result = self.client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
-        return result.text 
-    
+        self.prompt = """You are given the text content extracted from a PDF file. \
+                         Your task is to: 1. Identify as many key words in the text as you can. 
+                                         2. For each key word, provide a detailed definition that includes relevant context—even if that context is not explicitly mentioned in the PDF.
+                                         3. Output your results as a numbered list, strictly following this format:
+                                            1: Word - Definition.
+                          Make sure that the output contains only the numbered list and nothing else. 
+                          Do not include any additional commentary, explanations, or formatting."
+                      """
     def create_dict(self, generated_content):
         self.result_dict = {}
     
