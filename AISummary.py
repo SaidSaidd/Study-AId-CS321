@@ -1,4 +1,3 @@
-from abc import ABC
 from pathlib import Path
 from google import genai
 from AIFeatures import AIFeatures
@@ -15,6 +14,6 @@ class AISummary(AIFeatures):
         
         #create prompt (file and text prompt)
         #TODO: Prompt Engineering 
-        prompt = [uploaded_file, "\n\n", "Provide a detailed summary of the file provided. Split the summary into subsections and make sure all important information from the file is included in the summary."]
+        prompt = [uploaded_file, "\n\n", "Provide a detailed summary of the file provided. Split the summary into subsections and make sure all important information from the file is included in the summary. Try not defining to many topics. Instead, focus on giving a detialed overview of the contents of the file."]
         result = self.client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
         return result.text 

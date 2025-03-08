@@ -1,6 +1,7 @@
 from AIFeatures import AIFeatures
 from AIFlashcards import AIFlashcards
 from AISummary import AISummary
+from AIQuestions import AIQuestions
 
 # Replace with your actual API key
 API_KEY = 'AIzaSyCFP_xnzpKf8FBn7Nl1cqOU682IicQykLg'
@@ -14,7 +15,8 @@ ai_features.set_file("C:/Users/gill_/Desktop/notes.pdf")  # Replace with a valid
 # Create an instance of AIFlashcards using the AIFeatures instance
 flashcards = AIFlashcards(ai_features)
 summary = AISummary(ai_features)
-generated_text = summary.generate_content()
+questions = AIQuestions(ai_features, 15)
+generated_text = questions.generate_content()
 print("\nGenerated Content:\n", generated_text)
 # Run the generate_content method and print output
 #generated_text = flashcards.generate_content()
