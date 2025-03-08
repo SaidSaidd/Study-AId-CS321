@@ -7,11 +7,16 @@ from AIQuestions import AIQuestions
 API_KEY = 'AIzaSyCFP_xnzpKf8FBn7Nl1cqOU682IicQykLg'
 
 # Create an instance of AIFeatures
-ai_features = AIFeatures(api_key=API_KEY)
+ai_features = AIFeatures(API_KEY,"C:/Users/gill_/Desktop/notes.pdf")
+print(ai_features.uploaded_file)
+flashcards = AIFlashcards(ai_features)
+summary = AISummary(ai_features)
+questions = AIQuestions(ai_features, 5)
+print(flashcards.uploaded_file)
 
 # Set a file path (ensure this file exists)
-ai_features.set_file("C:/Users/gill_/Desktop/notes.pdf")  # Replace with a valid file path
-
+#ai_features.set_file("C:/Users/gill_/Desktop/notes.pdf")  # Replace with a valid file path
+'''
 # Create an instance of AIFlashcards using the AIFeatures instance
 flashcards = AIFlashcards(ai_features)
 summary = AISummary(ai_features)
@@ -30,3 +35,4 @@ print("\nGenerated Content:\n", generated_text)
 #delete files every time.
 ai_features.delete_all_files()
 flashcards.delete_all_files()
+'''
