@@ -7,6 +7,7 @@ class AIFeatures(ABC):
         self.file_path = None
         self.api_key = api_key
         self.client = genai.Client(api_key=api_key)
+        self.prompt = "Generate a brief summary of the file."
     
     def set_file(self, file_path):
         # Check if the file is a pdf or txt file. Gemini is not compatible with all file types.
@@ -28,7 +29,7 @@ class AIFeatures(ABC):
         uploaded_file = self.upload_file()
         #create prompt (file and text prompt
         #TODO: Prompt Engineering (more in subclasses)
-        prompt = [uploaded_file, "\n\n", "Generate a brief summary of the file."]
+        prompt = [uploaded_file, "\n\n", self.prompt]
         result = self.client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
         return result.text
 

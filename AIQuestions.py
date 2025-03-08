@@ -24,13 +24,3 @@ class AIQuestions(AIFeatures):
                     There must be exactly one correct answer per question.
                     Generate {self.num_questions} questions based on the content provided. Do not include any introductory or concluding text—only output the questions in the specified format.
                     """
-
-    def generate_content(self):
-            # upload file
-            uploaded_file = self.upload_file()
-            
-            #create prompt (file and text prompt)
-            #TODO: Prompt Engineering 
-            prompt = [uploaded_file, "\n\n", self.prompt]
-            result = self.client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
-            return result.text 

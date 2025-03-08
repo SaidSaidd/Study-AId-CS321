@@ -15,7 +15,7 @@ ai_features.set_file("C:/Users/gill_/Desktop/notes.pdf")  # Replace with a valid
 # Create an instance of AIFlashcards using the AIFeatures instance
 flashcards = AIFlashcards(ai_features)
 summary = AISummary(ai_features)
-questions = AIQuestions(ai_features, 15)
+questions = AIQuestions(ai_features, 5)
 generated_text = questions.generate_content()
 print("\nGenerated Content:\n", generated_text)
 # Run the generate_content method and print output
