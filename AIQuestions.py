@@ -3,6 +3,12 @@ from google import genai
 from AIFeatures import AIFeatures
 import re
 class AIQuestions(AIFeatures):
+    '''
+        Initialize values of AIQuestions object.
+        Take values from Prexisting AIFeatures object.
+        Change the prompt to match requirements of AIQuestions.
+        No need to re-upload file.
+    '''
     def __init__(self, aiFeatures, num_questions):
         # take attributes from already initialized aiFeatures variables.
         self.file_path = aiFeatures.file_path
@@ -29,6 +35,12 @@ class AIQuestions(AIFeatures):
                     """
         self.uploaded_file = aiFeatures.uploaded_file
 
+    '''
+        Parse Gemini's output.
+        Store each question in a list of dictionaries.
+        Each list element has a dictionary that holds the question number, question, choices, correct answer choice, and correct answer text.
+        The choices are stored in a sub dictionary with keys being a-d and values being the text.
+    '''
     def parse_output(self, generated_text):
         questions = []
         pattern = re.compile(r"(\d+)\.\s(.+?)\n(a\..+?)\n(b\..+?)\n(c\..+?)\n(d\..+?)\n([a-d])\.\s(.+?)\n", re.DOTALL)
