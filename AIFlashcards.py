@@ -5,10 +5,12 @@ import re
 
 class AIFlashcards(AIFeatures):
     '''
-        Initialize values of AIFlashcard object.
-        Take values from Prexisting AIFeatures object.
-        Change the prompt to match requirements of AIFlashcards.
-        No need to re-upload file.
+        Parameters:
+            self: this parameter identifies the client user instance of the system
+            The self object is the same one created in AI Features class. 
+            aiFeatures: this parameter is a reference to the Ai Feature class and is used to get information from AIFeatures methods and variables
+
+        This method creates an object with initalized values. The object values are based on the AIFeatures class values located in aiFeatures parameter.
     '''
     def __init__(self, aiFeatures):
         # take attributes from already initialized aiFeatures variables.
@@ -27,12 +29,19 @@ class AIFlashcards(AIFeatures):
         self.uploaded_file = aiFeatures.uploaded_file
         
     '''
-        Parse the output from Gemini.
-        Store values in a Dictionary.
-        The key of the dictionary is the number of the word.
-        The value is a dictionary itself.
-        The key of the sub dictionary is the word.
-        The value of the sub dictionary is the definition.
+        Parameters:
+            self: this parameter identifies the client user instance of the system
+            generated_content: this parameter identifies the content pulled from Gemini output to save in the dictonary
+    
+        Returns:
+            This method returns a directory of the information from the gemini call
+
+        This method takes information from a gemini call and initializes it in a dictionary object. 
+        This method dictonary works as explained below:
+            The key of the dictionary is the number of the word.
+            The value is a dictionary itself.
+            The key of the sub dictionary is the word.
+            The value of the sub dictionary is the definition.
     '''
     def create_dict(self, generated_content):
         self.result_dict = {}
@@ -49,12 +58,26 @@ class AIFlashcards(AIFeatures):
         return self.result_dict
 
     '''
-        Get the word from a word and definition pair.
+        Parameters:
+            self: this parameter identifies the client user instance of the system
+            word_and_def: this parameter is the word and definition of the dictionary
+        
+        Return:
+            this method returns the word in the given word and definition pair
+
+        This method gets the word from a word and definition pair.
     '''
     def get_word(self, word_and_def):
         return word_and_def.get("word", "").strip()
     '''
-        Get the definition from a word and definition pair.
+        Parameters:
+            self: this parameter identifies the client user instance of the system
+            word_and_def: this parameter is the word and definition of the dictionary
+        
+        Return:
+            this method returns the definition in the given word and definition pair
+ 
+        This method gets the definition from a word and definition pair.
     '''
     def get_def(self, word_and_def):
         return word_and_def.get("definition", "").strip()

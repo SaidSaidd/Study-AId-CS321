@@ -4,10 +4,12 @@ from AIFeatures import AIFeatures
 import re
 class AIQuestions(AIFeatures):
     '''
-        Initialize values of AIQuestions object.
-        Take values from Prexisting AIFeatures object.
-        Change the prompt to match requirements of AIQuestions.
-        No need to re-upload file.
+        Parameters:
+            self: this parameter identifies the client user instance of the system
+            aiFeatures: this parameter is an object from AIFeatures and holding the information passed into it from the AIFeatures class 
+            num_questions: this parameter creates an object for the questions
+        
+        This method takes an AIFeatures object and uses these values to initialize an AIQuestions object.
     '''
     def __init__(self, aiFeatures, num_questions):
         # take attributes from already initialized aiFeatures variables.
@@ -36,10 +38,18 @@ class AIQuestions(AIFeatures):
         self.uploaded_file = aiFeatures.uploaded_file
 
     '''
-        Parse Gemini's output.
-        Store each question in a list of dictionaries.
-        Each list element has a dictionary that holds the question number, question, choices, correct answer choice, and correct answer text.
-        The choices are stored in a sub dictionary with keys being a-d and values being the text.
+        Parameters:
+            self: this parameter identifies the client user instance of the system
+            generated_text: this object holds the question and potential answers to the question
+        
+        Returns:
+            This method returns the question object with the question and answers
+
+        This method creates a directory input from Genini output that holds the question, answer, and correct answer. 
+
+        The ways the generated_text object is stored in the directory is explained below: 
+            Each list element has a dictionary that holds the question number, question, choices, correct answer choice, and correct answer text.
+            The choices are stored in a sub dictionary with keys being a-d and values being the text.
     '''
     def parse_output(self, generated_text):
         questions = []
