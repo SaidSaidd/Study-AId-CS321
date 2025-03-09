@@ -35,10 +35,11 @@ def test_upload_file_file_not_set(ai_features):
     with pytest.raises(ValueError, match=re.escape("File path is not set. Call set_file() first.")):
         ai_features.upload_file()
 
-def test_upload_file_client_not_set(ai_features):
-    ai_features.client = None
+def test_upload_file_client_not_set():
+    ai_features2 = AIFeatures(API_KEY, "/Users/gill_/Desktop/notes.txt")
+    ai_features2.client = None
     with pytest.raises(ValueError, match=re.escape("Client is not set.")):
-        ai_features.upload_file()
+        ai_features2.upload_file()
 
 def test_upload_file(ai_features):
     assert ai_features.uploaded_file is not None
@@ -48,10 +49,11 @@ def test_generate_content_file_not_uploaded(ai_features):
     with pytest.raises(ValueError, match=re.escape("File not uploaded. Call upload_file() first.")):
         ai_features.generate_content()
 
-def test_generate_content_client_not_set(ai_features):
-    ai_features.client = None
+def test_generate_content_client_not_set():
+    ai_features2 = AIFeatures(API_KEY, "/Users/gill_/Desktop/notes.txt")
+    ai_features2.client = None    
     with pytest.raises(ValueError, match=re.escape("Client is not set.")):
-        ai_features.generate_content()
+        ai_features2.generate_content()
 
 def test_generate_content(ai_features):
     result = ai_features.generate_content()
@@ -78,16 +80,93 @@ def test_delete_all_files_multiple_files_to_delete(ai_features):
     result = ai_features.delete_all_files()
     assert result == 2
 
-
 #### Test cases for AIQuestions
 def test_parse_output_text(ai_features):
     ai_questions = AIQuestions(ai_features, 5)
     ai_output = ai_questions.generate_content()
     parsed_questions = ai_questions.parse_output(ai_output)
-    print("tested this")
     assert isinstance(parsed_questions, list)
-    assert len(parsed_questions) > 0
+    assert len(parsed_questions) == 5
     assert "question" in parsed_questions[0]
     assert "options" in parsed_questions[0]
     assert "correct_answer" in parsed_questions[0]
 
+####Test cases for AIFlashcards
+def test_create_dict(ai_features):
+    ai_flashcards = AIFlashcards(ai_features)
+    sample_content = """
+        1: AIFeatures - Class providing method to generate content using Gemini.
+        2: AISummary - Class that creates a detailed summary using Gemini.
+        3: AIFlashcards - Class that creates flashcards of key words using Gemini.
+        4: AIQuestions - Class that provides practice questions using Gemini.
+    """.strip()  # Strip leading/trailing whitespace
+
+    flashcards_dict = ai_flashcards.create_dict(sample_content)
+    
+    expected = {
+        "1": {"word":"AIFeatures","definition":"Class providing method to generate content using Gemini."},
+        "2": {"word":"AISummary","definition":"Class that creates a detailed summary using Gemini."},  # Ensure consistency
+        "3": {"word":"AIFlashcards","definition":"Class that creates flashcards of key words using Gemini."},
+        "4": {"word":"AIQuestions","definition":"Class that provides practice questions using Gemini."}
+    }
+    
+    assert isinstance(flashcards_dict, dict)
+    assert flashcards_dict == expected  # AssertionError if mismatch
+
+def test_create_dict_ai_input(ai_features):
+    ai_flashcards = AIFlashcards(ai_features)
+    ai_output = ai_flashcards.generate_content()
+    flashcards = ai_flashcards.create_dict(ai_output)
+    
+    assert isinstance(flashcards, dict)
+    assert isinstance(flashcards["1"], dict)
+    assert isinstance(flashcards["1"]["word"], str)
+    assert isinstance(flashcards["1"]["definition"], str)
+
+def test_get_word_valid(ai_features):
+    ai_flashcards = AIFlashcards(ai_features)
+    word_and_def = {"word": "AIFeatures", "definition": "Class providing method to generate content using Gemini."}
+    word = ai_flashcards.get_word(word_and_def)
+    
+    assert word == "AIFeatures"
+
+def test_get_word_missing_word(ai_features):
+    ai_flashcards = AIFlashcards(ai_features)
+    word_and_def = {"definition": "Class providing method to generate content using Gemini."}
+    word = ai_flashcards.get_word(word_and_def)
+    
+    assert word == ""
+
+def test_get_word_with_spaces(ai_features):
+    ai_flashcards = AIFlashcards(ai_features)
+    word_and_def = {"word": "  AIFeatures  ", "definition": "Class providing method to generate content using Gemini."}
+    word = ai_flashcards.get_word(word_and_def)
+    
+    # Assert that leading and trailing spaces are removed
+    assert word == "AIFeatures"
+
+def test_get_def_valid(ai_features):
+    ai_flashcards = AIFlashcards(ai_features)
+    word_and_def = {"word": "AIFeatures", "definition": "Class providing method to generate content using Gemini."}
+    definition = ai_flashcards.get_def(word_and_def)
+    
+    # Assert that the definition is correctly extracted
+    assert definition == "Class providing method to generate content using Gemini."
+
+def test_get_def_missing_definition(ai_features):
+    ai_flashcards = AIFlashcards(ai_features)
+    word_and_def = {"word": "AIFeatures"}
+    definition = ai_flashcards.get_def(word_and_def)
+    
+    # Assert that an empty string is returned when the definition is missing
+    assert definition == ""
+
+def test_get_def_with_spaces(ai_features):
+    ai_flashcards = AIFlashcards(ai_features)
+    word_and_def = {"word": "Some word", "definition": "  Class providing method to generate content using Gemini.  "}
+    definition = ai_flashcards.get_def(word_and_def)
+    
+    # Assert that leading and trailing spaces are removed from the definition
+    assert definition == "Class providing method to generate content using Gemini."
+
+    

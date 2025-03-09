@@ -46,7 +46,7 @@ class AIFlashcards(AIFeatures):
     def create_dict(self, generated_content):
         self.result_dict = {}
     
-        pattern = r'(?m)^(?P<num>\d+):\s*(?P<word>.*?)\s*-\s*(?P<definition>.*?)(?=\n\d+:|\Z)'
+        pattern = r'(?m)^\s*(?P<num>\d+):\s*(?P<word>.*?)\s*-\s*(?P<definition>.*?)(?=\n\s*\d+:|\Z)'
         
         matches = re.finditer(pattern, generated_content)
         for match in matches:
