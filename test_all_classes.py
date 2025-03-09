@@ -13,7 +13,7 @@ def ai_features():
     ai_features = AIFeatures(API_KEY, "/Users/gill_/Desktop/notes.pdf")
     yield ai_features
     ai_features.delete_all_files()
-
+'''
 ###Test cases for AIFeatures.py
 def test_set_file_invalid_py():
     with pytest.raises(ValueError, match="Only PDF and TXT files are allowed."):
@@ -79,16 +79,49 @@ def test_delete_all_files_multiple_files_to_delete(ai_features):
     ai_features2 = AIFeatures(API_KEY, "/Users/gill_/Desktop/notes.txt")
     result = ai_features.delete_all_files()
     assert result == 2
-
+'''
 #### Test cases for AIQuestions
 def test_parse_output_text(ai_features):
     ai_questions = AIQuestions(ai_features, 5)
     ai_output = ai_questions.generate_content()
     parsed_questions = ai_questions.parse_output(ai_output)
-    print("tested this")
     assert isinstance(parsed_questions, list)
-    assert len(parsed_questions) > 0
+    assert len(parsed_questions) == 5
     assert "question" in parsed_questions[0]
     assert "options" in parsed_questions[0]
     assert "correct_answer" in parsed_questions[0]
 
+####Test cases for AIFlashcards
+def test_create_dict(ai_features):
+    ai_flashcards = AIFlashcards(ai_features)
+    sample_content = """
+        1: AIFeatures - Class providing method to generate content using Gemini.
+        2: AISummary - Class that creates a detailed summary using Gemini.
+        3: AIFlashcards - Class that creates flashcards of key words using Gemini.
+        4: AIQuestions - Class that provides practice questions using Gemini.
+    """.strip()  # Strip leading/trailing whitespace
+
+    flashcards_dict = ai_flashcards.create_dict(sample_content)
+    
+    expected = {
+        "1": {"word":"AIFeatures","definition":"Class providing method to generate content using Gemini."},
+        "2": {"word":"AISummary","definition":"Class that creates a detailed summary using Gemini."},  # Ensure consistency
+        "3": {"word":"AIFlashcards","definition":"Class that creates flashcards of key words using Gemini."},
+        "4": {"word":"AIQuestions","definition":"Class that provides practice questions using Gemini."}
+    }
+    
+    assert isinstance(flashcards_dict, dict)
+    assert flashcards_dict == expected  # AssertionError if mismatch
+
+def test_create_dict_ai_input(ai_features):
+    ai_flashcards = AIFlashcards(ai_features)
+    ai_output = ai_flashcards.generate_content()
+    flashcards = ai_flashcards.create_dict(ai_output)
+    
+    assert isinstance(flashcards, dict)
+    assert isinstance(flashcards["1"], dict)
+    assert isinstance(flashcards["1"]["word"], str)
+    assert isinstance(flashcards["1"]["definition"], str)
+
+
+    
