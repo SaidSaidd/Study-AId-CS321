@@ -63,4 +63,3 @@ def test_generate_content():
     result = ai_features.generate_content()
     assert result is not None
 
-ai_features.delete_all_files()

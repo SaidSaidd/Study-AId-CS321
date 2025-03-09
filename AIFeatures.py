@@ -66,6 +66,7 @@ class AIFeatures(ABC):
         Needed to comply with Gemini free tiers file storage quota.
     '''
     def delete_all_files(self):
+        #updated to return number of files deleted.
         if not self.client:
             raise ValueError("Client is not set.")
         #delete all files that gemini has stored. Run frequently during development to ensure file limit is not exceeded.
