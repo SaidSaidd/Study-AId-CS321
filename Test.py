@@ -97,3 +97,54 @@ def test_parse_output_text(ai_questions):
     
     
 #ai_features.delete_all_files()
+
+## Test cases for AIFlashcards
+
+def test_flashcards(api_key, file_path):
+    print("test_flashcards() started") 
+    try:
+        #Create the instance with the input file_path
+        print("Creating AIFeatures instance...")  
+        ai_features = AIFeatures(api_key, file_path)
+        
+        #Create a flashcard instance 
+        print("Creating AIFlashcards instance...")  
+        flashcards = AIFlashcards(ai_features)
+        
+        #generate the flashcards
+        print("Generating flashcards...")  
+        try:
+            generated_text = flashcards.generate_content()
+            print("Generated text:", generated_text)  
+        except Exception as e:
+            print("Error in generate_content():", str(e))
+            generated_text = None
+        
+        #if generated text was successful
+        if generated_text:
+            #parse content into a dictionary
+            print("Parsing generated text...") 
+            try:
+                flashcards_dict = flashcards.create_dict(generated_text)
+                print("Parsed dictionary:", flashcards_dict) 
+            except Exception as e:
+                print("Error in create_dict():", str(e))
+                flashcards_dict = {}
+            
+            #print the flashcards
+            print("Printing flashcards...")  
+            for key, value in flashcards_dict.items():
+                print(f"{key}: {value['word']} - {value['definition']}")
+            
+            #print the word and definition
+            for key, value in flashcards_dict.items():
+                print(f'Word: {flashcards.get_word(value)}')
+                print(f'Definition: {flashcards.get_def(value)}')
+        
+    except Exception as e:
+        print("An error occurred:", str(e))
+    
+    #Delete all files
+    finally:
+        print("Deleting all files...")
+        ai_features.delete_all_files()
