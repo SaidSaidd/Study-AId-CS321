@@ -8,12 +8,12 @@ from AIQuestions import AIQuestions
 API_KEY = 'AIzaSyCFP_xnzpKf8FBn7Nl1cqOU682IicQykLg'
 
 # Create an instance of AIFeatures
-ai_features = AIFeatures(API_KEY,"/Users/gill_/Desktop/notes.pdf")
-ai_features.delete_all_files()
+#ai_features = AIFeatures(API_KEY,"/Users/gill_/Desktop/notes.py")
+#ai_features.delete_all_files()
 #flashcards = AIFlashcards(ai_features)
 #summary = AISummary(ai_features)
-#questions = AIQuestions(ai_features, 5)
-
+#ai_questions = AIQuestions(ai_features, 5)
+'''
 def test_set_file_invalid_py():
     with pytest.raises(ValueError, match="Only PDF and TXT files are allowed."):
         ai_features = AIFeatures(API_KEY, "/Users/gill_/Desktop/notes.py")
@@ -62,3 +62,38 @@ def test_generate_content():
     ai_features = AIFeatures(API_KEY, "/Users/gill_/Desktop/notes.pdf")
     result = ai_features.generate_content()
     assert result is not None
+
+'''
+
+
+#### Test cases for AIQuestions
+
+@pytest.fixture
+def ai_features():
+    return AIFeatures(API_KEY, "C:/Users/rodri/Desktop/test.txt")
+
+@pytest.fixture
+def ai_questions(ai_features):
+    return AIQuestions(ai_features, 5)
+
+def test_generate_content(ai_questions):
+    result = ai_questions.generate_content()
+    assert result is not None
+    
+
+
+def test_parse_output_text(ai_questions):
+    ai_output = ai_questions.generate_content()
+    print("\nGenerated AI Output:\n", ai_output)
+    parsed_questions = ai_questions.parse_output(ai_output)
+    print("\nParsed Questions:\n", parsed_questions)
+    
+    assert isinstance(parsed_questions, list)
+    assert len(parsed_questions) > 0
+    assert "question" in parsed_questions[0]
+    assert "options" in parsed_questions[0]
+    assert "correct_answer" in parsed_questions[0]
+    
+    
+    
+#ai_features.delete_all_files()
