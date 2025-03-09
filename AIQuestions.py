@@ -53,26 +53,15 @@ class AIQuestions(AIFeatures):
     '''
     def parse_output(self, generated_text):
         questions = []
-        #pattern = re.compile(r"(\d+)\.\s(.+?)\n(a\..+?)\n(b\..+?)\n(c\..+?)\n(d\..+?)\n([a-d])\.\s(.+?)\n", re.DOTALL)
-        pattern = re.compile(r"\s*(\d+)\.\s(.+?)\n"r"a\.\s(.+?)\n"r"b\.\s(.+?)\n"r"c\.\s(.+?)\n"r"d\.\s(.+?)\n"r"(?:CorrectAnswer|([a-d]))",re.DOTALL)
-        '''
-        Function was printing the the correct answer as b.b and not as b.CorrectAnswer
-
-        for match in pattern.finditer(generated_text):
-            question_data = {
-                "question_number": int(match.group(1)),
-                "question": match.group(2).strip(),
-                "options": {
-                    "a": match.group(3)[2:].strip(),
-                    "b": match.group(4)[2:].strip(),
-                    "c": match.group(5)[2:].strip(),
-                    "d": match.group(6)[2:].strip(),
-                },
-                "correct_answer": match.group(7).strip(),
-                "correct_answer_text": match.group(8).strip()
-            }
-            questions.append(question_data)
-        '''
+        pattern = re.compile(
+            r"\s*(\d+)\.\s(.+?)\n"
+            r"a\.\s(.+?)\n"
+            r"b\.\s(.+?)\n"
+            r"c\.\s(.+?)\n"
+            r"d\.\s(.+?)\n"
+            r"(?:CorrectAnswer|([a-d]))?",
+            re.DOTALL
+        )
 
         for match in pattern.finditer(generated_text):
             question_data = {
@@ -83,9 +72,9 @@ class AIQuestions(AIFeatures):
                     "b": match.group(4).strip(),
                     "c": match.group(5).strip(),
                     "d": match.group(6).strip(),
-            },
-            "correct_answer": match.group(7)
-        }
-        questions.append(question_data)
-        
+                },
+                "correct_answer": match.group(7) if match.group(7) is not None else "No correct answer provided"
+            }
+            questions.append(question_data)
+
         return questions

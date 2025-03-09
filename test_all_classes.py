@@ -80,7 +80,6 @@ def test_delete_all_files_multiple_files_to_delete(ai_features):
     result = ai_features.delete_all_files()
     assert result == 2
 
-
 #### Test cases for AIQuestions
 def test_parse_output_text(ai_features):
     ai_questions = AIQuestions(ai_features, 5)
