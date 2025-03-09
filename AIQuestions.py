@@ -53,8 +53,11 @@ class AIQuestions(AIFeatures):
     '''
     def parse_output(self, generated_text):
         questions = []
-        pattern = re.compile(r"(\d+)\.\s(.+?)\n(a\..+?)\n(b\..+?)\n(c\..+?)\n(d\..+?)\n([a-d])\.\s(.+?)\n", re.DOTALL)
-        
+        #pattern = re.compile(r"(\d+)\.\s(.+?)\n(a\..+?)\n(b\..+?)\n(c\..+?)\n(d\..+?)\n([a-d])\.\s(.+?)\n", re.DOTALL)
+        pattern = re.compile(r"\s*(\d+)\.\s(.+?)\n"r"a\.\s(.+?)\n"r"b\.\s(.+?)\n"r"c\.\s(.+?)\n"r"d\.\s(.+?)\n"r"(?:CorrectAnswer|([a-d]))",re.DOTALL)
+        '''
+        Function was printing the the correct answer as b.b and not as b.CorrectAnswer
+
         for match in pattern.finditer(generated_text):
             question_data = {
                 "question_number": int(match.group(1)),
@@ -69,5 +72,20 @@ class AIQuestions(AIFeatures):
                 "correct_answer_text": match.group(8).strip()
             }
             questions.append(question_data)
+        '''
+
+        for match in pattern.finditer(generated_text):
+            question_data = {
+                "question_number": int(match.group(1)),
+                "question": match.group(2).strip(),
+                "options": {
+                    "a": match.group(3).strip(),
+                    "b": match.group(4).strip(),
+                    "c": match.group(5).strip(),
+                    "d": match.group(6).strip(),
+            },
+            "correct_answer": match.group(7)
+        }
+        questions.append(question_data)
         
         return questions
