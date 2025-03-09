@@ -13,7 +13,7 @@ def ai_features():
     ai_features = AIFeatures(API_KEY, "/Users/gill_/Desktop/notes.pdf")
     yield ai_features
     ai_features.delete_all_files()
-'''
+
 ###Test cases for AIFeatures.py
 def test_set_file_invalid_py():
     with pytest.raises(ValueError, match="Only PDF and TXT files are allowed."):
@@ -79,7 +79,7 @@ def test_delete_all_files_multiple_files_to_delete(ai_features):
     ai_features2 = AIFeatures(API_KEY, "/Users/gill_/Desktop/notes.txt")
     result = ai_features.delete_all_files()
     assert result == 2
-'''
+
 #### Test cases for AIQuestions
 def test_parse_output_text(ai_features):
     ai_questions = AIQuestions(ai_features, 5)
@@ -123,5 +123,50 @@ def test_create_dict_ai_input(ai_features):
     assert isinstance(flashcards["1"]["word"], str)
     assert isinstance(flashcards["1"]["definition"], str)
 
+def test_get_word_valid(ai_features):
+    ai_flashcards = AIFlashcards(ai_features)
+    word_and_def = {"word": "AIFeatures", "definition": "Class providing method to generate content using Gemini."}
+    word = ai_flashcards.get_word(word_and_def)
+    
+    assert word == "AIFeatures"
+
+def test_get_word_missing_word(ai_features):
+    ai_flashcards = AIFlashcards(ai_features)
+    word_and_def = {"definition": "Class providing method to generate content using Gemini."}
+    word = ai_flashcards.get_word(word_and_def)
+    
+    assert word == ""
+
+def test_get_word_with_spaces(ai_features):
+    ai_flashcards = AIFlashcards(ai_features)
+    word_and_def = {"word": "  AIFeatures  ", "definition": "Class providing method to generate content using Gemini."}
+    word = ai_flashcards.get_word(word_and_def)
+    
+    # Assert that leading and trailing spaces are removed
+    assert word == "AIFeatures"
+
+def test_get_def_valid(ai_features):
+    ai_flashcards = AIFlashcards(ai_features)
+    word_and_def = {"word": "AIFeatures", "definition": "Class providing method to generate content using Gemini."}
+    definition = ai_flashcards.get_def(word_and_def)
+    
+    # Assert that the definition is correctly extracted
+    assert definition == "Class providing method to generate content using Gemini."
+
+def test_get_def_missing_definition(ai_features):
+    ai_flashcards = AIFlashcards(ai_features)
+    word_and_def = {"word": "AIFeatures"}
+    definition = ai_flashcards.get_def(word_and_def)
+    
+    # Assert that an empty string is returned when the definition is missing
+    assert definition == ""
+
+def test_get_def_with_spaces(ai_features):
+    ai_flashcards = AIFlashcards(ai_features)
+    word_and_def = {"word": "Some word", "definition": "  Class providing method to generate content using Gemini.  "}
+    definition = ai_flashcards.get_def(word_and_def)
+    
+    # Assert that leading and trailing spaces are removed from the definition
+    assert definition == "Class providing method to generate content using Gemini."
 
     
