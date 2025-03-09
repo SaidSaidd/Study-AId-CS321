@@ -35,9 +35,12 @@ class AIFeatures(ABC):
         Return Gemini's output.
     '''
     def upload_file(self):
+        if not self.client:
+            raise ValueError("Client is not set.")
+        
         if not self.file_path:
             raise ValueError("File path is not set. Call set_file() first.")
-            
+
         uploaded_file = self.client.files.upload(file=self.file_path)
         return uploaded_file
     
@@ -49,6 +52,11 @@ class AIFeatures(ABC):
         # Upload the file and then include it in the prompt
         #create prompt (file and text prompt
         #TODO: Prompt Engineering (more in subclasses)
+        if not self.client:
+            raise ValueError("Client is not set.")
+        
+        if not self.uploaded_file:
+            raise ValueError("File not uploaded. Call upload_file() first.")
         prompt = [self.uploaded_file, "\n\n", self.prompt]
         result = self.client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
         return result.text
@@ -58,17 +66,20 @@ class AIFeatures(ABC):
         Needed to comply with Gemini free tiers file storage quota.
     '''
     def delete_all_files(self):
+        if not self.client:
+            raise ValueError("Client is not set.")
         #delete all files that gemini has stored. Run frequently during development to ensure file limit is not exceeded.
         files = self.client.files.list()
+        count = 0
         if not files:
-            print("No files to delete.")
-            return
+            return 0
         
-        print("Deleting all files:")
         for file in files:
             try:
                 self.client.files.delete(name=file.name)
-                print(f"Deleted file: {file.name}")
+                count += 1
             except Exception as e:
                 print(f"Failed to delete file: {file.name}. Error: {e}")
+        
+        return count
     
