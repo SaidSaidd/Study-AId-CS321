@@ -4,10 +4,11 @@ from AIFeatures import AIFeatures
 
 class AISummary(AIFeatures):
     '''
-        Initialize values of AISummary object.
-        Take values from Prexisting AIFeatures object.
-        Change the prompt to match requirements of AISummary.
-        No need to re-upload file.
+        Parameters:
+            self: this parameter identifies the client user instance of the system
+            aiFeatures: this parameter is an object from AIFeatures and holding the information passed into it from the AIFeatures class 
+        
+        This method summerizes the information saved in the AIFeatures object.
     '''
     def __init__(self, aiFeatures):
         # take attributes from already initialized aiFeatures variables.

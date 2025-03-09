@@ -4,11 +4,16 @@ from google import genai
 
 class AIFeatures(ABC):
     '''
-        The constructor for AIFeatures.
-        Initializes the Client using the provided API key.
-        Set the file path to the provided file path.
-        Upload the file to the client.  
-        Create the client
+        Parameters:
+            self: this parameter identifies the client user instance of the system
+            api_key: this parameter identifies the users given API key 
+            file_path: this parameter identifies the local file path of the selected document to be uploaded
+    
+        Method calls:
+            This method calls the set_file() and upload_file() methods that are defined in this class
+
+        This method is the constructor for AIFeatures.
+        This method creates an object of the self instance information including the users API key and document path.
     '''
     def __init__(self, api_key, file_path):
         self.api_key = api_key
@@ -18,8 +23,14 @@ class AIFeatures(ABC):
         self.uploaded_file = self.upload_file()
     
     '''
-        Set file path to the specified file path.
-        Ensure that the file is a pdf or a text file.
+        Parameters:
+            self: this parameter identifies the client user instance of the system
+            file_path: this parameter saves the file path of the file to upload as long as it ends in .pdf or .txt
+
+        Error Control:
+            This method prints a statement if the wrong type of file is tried to be uploaded.
+
+        This method identifies which file the user wants to upload to Gemini and then saves the file_path to identify that file
     '''
     def set_file(self, file_path):
         # Check if the file is a pdf or txt file. Gemini is not compatible with all file types.
@@ -29,10 +40,16 @@ class AIFeatures(ABC):
         self.file_path = Path(file_path)
     
     '''
-        Upload file to Gemini.
-        Ensure the file path is set.
-        Gemini outputs a string  containing data about the file uploaded.
-        Return Gemini's output.
+        Parameters:
+            self: this parameter identifies the client user instance of the system
+
+        Error Control:
+            This method prints a statement if the set_file() function is not run before this function occurs
+
+        Return:
+            This method returns Gemini's output that contains a string of data about the file uploaded
+
+        This method uploads the document to Gemini and gets a string of information back from the API
     '''
     def upload_file(self):
         if not self.client:
@@ -45,8 +62,13 @@ class AIFeatures(ABC):
         return uploaded_file
     
     '''
-        Get output from Gemini based on prompt defined earlier.
-        Returns Gemini's output.
+        Parameters:
+            self: this parameter identifies the client user instance of the system
+
+        Return:
+            This method returns the results from Gemini output based on imported file data
+
+        This method gets an output from Gemini based on prompt defined earlier.
     '''
     def generate_content(self):
         # Upload the file and then include it in the prompt
@@ -62,7 +84,13 @@ class AIFeatures(ABC):
         return result.text
 
     '''
-        Delete all files from Gemini.
+        Parameters:
+            self: this parameter identifies the client user instance of the system
+
+        Error Control:
+            This method prints a statement if the file was not deleted
+
+        This method deletes all files from Gemini, if there are any saved in Gemini.
         Needed to comply with Gemini free tiers file storage quota.
     '''
     def delete_all_files(self):

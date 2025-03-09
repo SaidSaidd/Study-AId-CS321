@@ -1,5 +1,6 @@
 import pytest
 import re
+
 from AIFeatures import AIFeatures
 from AIFlashcards import AIFlashcards
 from AISummary import AISummary
@@ -63,3 +64,37 @@ def test_generate_content():
     result = ai_features.generate_content()
     assert result is not None
 
+#### Test cases for AIQuestions
+
+#Not needed. generate_content() is inherited from AIFeatures and has already been tested.
+'''
+@pytest.fixture
+def ai_features():
+    return AIFeatures(API_KEY, "C:/Users/rodri/Desktop/test.txt")
+
+@pytest.fixture
+def ai_questions(ai_features):
+    return AIQuestions(ai_features, 5)
+
+def test_generate_content(ai_questions):
+    result = ai_questions.generate_content()
+    assert result is not None
+'''   
+
+
+def test_parse_output_text(ai_questions):
+    ai_output = ai_questions.generate_content()
+    print("\nGenerated AI Output:\n", ai_output)
+    parsed_questions = ai_questions.parse_output(ai_output)
+    print("\nParsed Questions:\n", parsed_questions)
+    
+    assert isinstance(parsed_questions, list)
+    assert len(parsed_questions) > 0
+    assert "question" in parsed_questions[0]
+    assert "options" in parsed_questions[0]
+    assert "correct_answer" in parsed_questions[0]
+    
+    
+test_generate_content    
+
+#ai_features.delete_all_files()
