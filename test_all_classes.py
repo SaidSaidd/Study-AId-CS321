@@ -35,10 +35,11 @@ def test_upload_file_file_not_set(ai_features):
     with pytest.raises(ValueError, match=re.escape("File path is not set. Call set_file() first.")):
         ai_features.upload_file()
 
-def test_upload_file_client_not_set(ai_features):
-    ai_features.client = None
+def test_upload_file_client_not_set():
+    ai_features2 = AIFeatures(API_KEY, "/Users/gill_/Desktop/notes.txt")
+    ai_features2.client = None
     with pytest.raises(ValueError, match=re.escape("Client is not set.")):
-        ai_features.upload_file()
+        ai_features2.upload_file()
 
 def test_upload_file(ai_features):
     assert ai_features.uploaded_file is not None
@@ -48,10 +49,11 @@ def test_generate_content_file_not_uploaded(ai_features):
     with pytest.raises(ValueError, match=re.escape("File not uploaded. Call upload_file() first.")):
         ai_features.generate_content()
 
-def test_generate_content_client_not_set(ai_features):
-    ai_features.client = None
+def test_generate_content_client_not_set():
+    ai_features2 = AIFeatures(API_KEY, "/Users/gill_/Desktop/notes.txt")
+    ai_features2.client = None    
     with pytest.raises(ValueError, match=re.escape("Client is not set.")):
-        ai_features.generate_content()
+        ai_features2.generate_content()
 
 def test_generate_content(ai_features):
     result = ai_features.generate_content()
