@@ -15,6 +15,7 @@ ai_features.delete_all_files()
 #summary = AISummary(ai_features)
 #questions = AIQuestions(ai_features, 5)
 
+###Test cases for AIFeatures.py
 def test_set_file_invalid_py():
     with pytest.raises(ValueError, match="Only PDF and TXT files are allowed."):
         ai_features = AIFeatures(API_KEY, "/Users/gill_/Desktop/notes.py")
@@ -64,29 +65,36 @@ def test_generate_content():
     result = ai_features.generate_content()
     assert result is not None
 
+def test_delete_all_files_client_not_set():
+    ai_features = AIFeatures(API_KEY, "/Users/gill_/Desktop/notes.pdf")
+    ai_features.client = None
+    with pytest.raises(ValueError, match=re.escape("Client is not set.")):
+        ai_features.delete_all_files()
+
+def test_delete_all_files():
+    ai_features = AIFeatures(API_KEY, "/Users/gill_/Desktop/notes.pdf")
+    result = ai_features.delete_all_files()
+    assert result == 1
+
+def test_delete_all_files_no_files_to_delete():
+    ai_features = AIFeatures(API_KEY, "/Users/gill_/Desktop/notes.pdf")
+    ai_features.delete_all_files()
+    result = ai_features.delete_all_files()
+    assert result == 0
+
+def test_delete_all_files_multiple_files_to_delete():
+    ai_features = AIFeatures(API_KEY, "/Users/gill_/Desktop/notes.pdf")
+    ai_features2 = AIFeatures(API_KEY, "/Users/gill_/Desktop/notes.txt")
+    result = ai_features.delete_all_files()
+    assert result == 2
+
+
 #### Test cases for AIQuestions
-
-#Not needed. generate_content() is inherited from AIFeatures and has already been tested.
-'''
-@pytest.fixture
-def ai_features():
-    return AIFeatures(API_KEY, "C:/Users/rodri/Desktop/test.txt")
-
-@pytest.fixture
-def ai_questions(ai_features):
-    return AIQuestions(ai_features, 5)
-
-def test_generate_content(ai_questions):
-    result = ai_questions.generate_content()
-    assert result is not None
-'''   
-
-
-def test_parse_output_text(ai_questions):
+def test_parse_output_text():
+    ai_features = AIFeatures(API_KEY, "/Users/gill_/Desktop/notes.pdf")
+    ai_questions = AIQuestions(ai_features, 5)
     ai_output = ai_questions.generate_content()
-    print("\nGenerated AI Output:\n", ai_output)
     parsed_questions = ai_questions.parse_output(ai_output)
-    print("\nParsed Questions:\n", parsed_questions)
     
     assert isinstance(parsed_questions, list)
     assert len(parsed_questions) > 0
@@ -94,7 +102,6 @@ def test_parse_output_text(ai_questions):
     assert "options" in parsed_questions[0]
     assert "correct_answer" in parsed_questions[0]
     
-    
-test_generate_content    
+
 
 #ai_features.delete_all_files()
