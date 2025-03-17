@@ -169,4 +169,11 @@ def test_get_def_with_spaces(ai_features):
     # Assert that leading and trailing spaces are removed from the definition
     assert definition == "Class providing method to generate content using Gemini."
 
-    
+#Test cases for AISummary
+def test_create_AISummary_instance(ai_features):
+    ai_summary = AISummary(ai_features)
+
+    assert ai_summary.file_path == ai_features.file_path
+    assert ai_summary.client == ai_features.client
+    assert ai_summary.prompt is not None
+    assert ai_summary.uploaded_file == ai_features.uploaded_file
