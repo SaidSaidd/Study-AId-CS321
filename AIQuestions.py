@@ -34,6 +34,7 @@ class AIQuestions(AIFeatures):
                     There must be exactly one correct answer per question.
                     Generate {self.num_questions} questions based on the content provided. Do not include any introductory or concluding text—only output the questions in the specified format.
                     Add an empty line between questions.
+                    If there are example problems in the file, try coming up with a few problems similar to the example problems.
                     """
         self.uploaded_file = aiFeatures.uploaded_file
 
