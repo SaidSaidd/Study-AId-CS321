@@ -80,7 +80,7 @@ class AIFeatures(ABC):
         if not self.uploaded_file:
             raise ValueError("File not uploaded. Call upload_file() first.")
         prompt = [self.uploaded_file, "\n\n", self.prompt]
-        result = self.client.models.generate_content(model="gemini-2.0-flash-thinking-exp", contents=prompt)
+        result = self.client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
         return result.text
 
     '''

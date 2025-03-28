@@ -84,6 +84,7 @@ def test_delete_all_files_multiple_files_to_delete(ai_features):
 def test_parse_output_text(ai_features):
     ai_questions = AIQuestions(ai_features, 5)
     ai_output = ai_questions.generate_content()
+    print(ai_output)
     parsed_questions = ai_questions.parse_output(ai_output)
     assert isinstance(parsed_questions, list)
     assert len(parsed_questions) == 5

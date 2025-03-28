@@ -1,6 +1,6 @@
 from pathlib import Path
 from google import genai
-from AIFeatures import AIFeatures
+from .AIFeatures import AIFeatures
 import re
 class AIQuestions(AIFeatures):
     '''
@@ -55,12 +55,12 @@ class AIQuestions(AIFeatures):
     def parse_output(self, generated_text):
         questions = []
         pattern = re.compile(
-            r"\s*(\d+)\.\s(.+?)\n"
-            r"a\.\s(.+?)\n"
-            r"b\.\s(.+?)\n"
-            r"c\.\s(.+?)\n"
-            r"d\.\s(.+?)\n"
-            r"(?:CorrectAnswer|([a-d]))?",
+            r"\s*(\d+)\.\s(.+?)\n"  # Question number and text
+            r"a\.\s(.+?)\n"  # Option A
+            r"b\.\s(.+?)\n"  # Option B
+            r"c\.\s(.+?)\n"  # Option C
+            r"d\.\s(.+?)\n"  # Option D
+            r"([a-d])\.\s(.+?)(?:\n|$)",  # Correct answer (e.g., "b. x = 3")
             re.DOTALL
         )
 
@@ -79,3 +79,9 @@ class AIQuestions(AIFeatures):
             questions.append(question_data)
 
         return questions
+
+'''
+ai_features = AIFeatures("AIzaSyCFP_xnzpKf8FBn7Nl1cqOU682IicQykLg", "/Users/gill_/Desktop/notes.pdf")
+ai_questions = AIQuestions(ai_features,5)
+print(ai_questions.generate_content())
+ai_features.delete_all_files()'''

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Dashboard</title>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        .dashboard {
+            display: flex;
+            height: 100vh;
+            background: #f5f5f5;
+        }
+        .sidebar {
+            width: 250px;
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+            position: fixed;
+            height: 100%;
+        }
+        .sidebar h2 {
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        .sidebar ul {
+            list-style: none;
+        }
+        .sidebar li {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #34495e;
+            transition: background 0.3s;
+        }
+        .sidebar li:hover {
+            background: #34495e;
+        }
+        .sidebar li.selected {
+            background: #1abc9c;
+            font-weight: bold;
+        }
+        .main {
+            margin-left: 250px;
+            flex: 1;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .header button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #3498db;
+            color: white;
+            transition: background 0.3s;
+        }
+        .header button:hover {
+            background: #2980b9;
+        }
+        .content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .content h2 {
+            margin-bottom: 20px;
+        }
+        .overview {
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+        }
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .action-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #1abc9c;
+            color: white;
+            transition: background 0.3s;
+        }
+        .action-buttons button:hover {
+            background: #16a085;
+        }
+        .upload-area {
+            border: 2px dashed #3498db;
+            padding: 40px;
+            text-align: center;
+            border-radius: 8px;
+            background: #f0f8ff;
+            cursor: pointer;
+        }
+        .upload-area.dragover {
+            background: #e0f0ff;
+            border-color: #2980b9;
+        }
+        .upload-area p {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .upload-area input[type="file"] {
+            display: none;
+        }
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 600px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        .popup h3 {
+            margin-bottom: 15px;
+        }
+        .popup .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            border: none;
+            background: #e74c3c;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .popup .flashcard, .popup .question {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .popup .question ul {
+            list-style: none;
+            margin: 10px 0 10px 20px;
+        }
+        .popup .question li:before {
+            content: "• ";
+            color: #3498db;
+        }
+        .popup .summary-content {
+            line-height: 1.6;
+        }
+        .popup .summary-content ul {
+            list-style-type: disc;
+            margin-left: 20px;
+        }
+        .popup .summary-content ol {
+            list-style-type: decimal;
+            margin-left: 20px;
+        }
+        .popup .summary-content strong {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="sidebar">
+            <h2>Chats</h2>
+            <ul id="chatList"></ul>
+        </div>
+        <div class="main">
+            <div class="header">
+                <button id="newChatButton">Upload New File</button>
+                <button id="logoutButton">Logout</button>
+            </div>
+            <div class="content">
+                <h2 id="chatTitle">Select a chat or upload a new file</h2>
+                <div id="chatContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFZH6hrEFhv18ayF3M6DZMN4u0tM-wSaM",
+            authDomain: "study-aid-8a354.firebaseapp.com",
+            projectId: "study-aid-8a354",
+            storageBucket: "study-aid-8a354.firebasestorage.app",
+            messagingSenderId: "1003476902696",
+            appId: "1:1003476902696:web:4c4e47f83a76800212e61d",
+            measurementId: "G-NXEYHM1DWV"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                if (user.emailVerified) {
+                    loadChats(user.uid);
+                } 
+                else {
+                    auth.signOut().then(() => {
+                        window.location.href = '/';
+                    });
+                }
+            } 
+            else {
+                window.location.href = '/';
+            }
+        });
+
+        function loadChats(uid) {
+            console.log('Loading chats for UID:', uid);
+            db.collection('chats')
+                .where('userId', '==', uid)
+                .orderBy('timestamp', 'desc')
+                .onSnapshot(snapshot => {
+                    console.log('Snapshot received:', snapshot.size, 'documents');
+                    const chatList = document.getElementById('chatList');
+                    chatList.innerHTML = '';
+                    if (snapshot.empty) {
+                        document.getElementById('chatTitle').textContent = 'No chats yet. Upload a file to start.';
+                        document.getElementById('chatContent').innerHTML = '';
+                    } 
+                    else {
+                        snapshot.forEach(doc => {
+                            const chat = doc.data();
+                            const li = document.createElement('li');
+                            li.textContent = chat.filename || `Chat ${doc.id}`;
+                            li.setAttribute('data-chat-id', doc.id);
+                            li.addEventListener('click', () => loadChatContent(doc.id));
+                            chatList.appendChild(li);
+                        });
+                        const firstChatId = snapshot.docs[0].id;
+                        loadChatContent(firstChatId);
+                    }
+                }, error => {
+                    console.error('Firestore listener error:', error);
+                    document.getElementById('chatTitle').textContent = 'Error loading chats: ' + error.message;
+                });
+        }
+
+        function loadChatContent(chatId) {
+            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('selected'));
+            const selectedLi = document.querySelector(`.sidebar li[data-chat-id="${chatId}"]`);
+            if (selectedLi) selectedLi.classList.add('selected');
+
+            db.collection('chats').doc(chatId).get().then(doc => {
+                if (doc.exists) {
+                    const chat = doc.data();
+                    document.getElementById('chatTitle').textContent = chat.filename || `Chat ${chatId}`;
+                    const contentDiv = document.getElementById('chatContent');
+                    contentDiv.innerHTML = '';
+                    contentDiv.appendChild(createChatDisplay(chat));
+                }
+            }).catch(error => {
+                console.error('Error loading chat:', error);
+                document.getElementById('chatTitle').textContent = 'Error loading chat.';
+            });
+        }
+
+        function createChatDisplay(chat) {
+            const container = document.createElement('div');
+            const overviewDiv = document.createElement('div');
+            overviewDiv.className = 'overview';
+            overviewDiv.textContent = chat.overview || 'No overview available.';
+            container.appendChild(overviewDiv);
+
+            const buttonsDiv = document.createElement('div');
+            buttonsDiv.className = 'action-buttons';
+            const encodedSummary = encodeURIComponent(chat.summary || 'No summary available.');
+            const encodedFlashcards = encodeURIComponent(JSON.stringify(chat.flashcards || []));
+            const encodedQuestions = encodeURIComponent(JSON.stringify(chat.questions || []));
+            buttonsDiv.innerHTML = `
+                <button class="summary-btn" data-content="${encodedSummary}">Summary</button>
+                <button class="flashcards-btn" data-content="${encodedFlashcards}">Flashcards</button>
+                <button class="questions-btn" data-content="${encodedQuestions}">Questions</button>
+            `;
+
+            buttonsDiv.querySelector('.summary-btn').addEventListener('click', () => openPopup('summary', encodedSummary));
+            buttonsDiv.querySelector('.flashcards-btn').addEventListener('click', () => openPopup('flashcards', encodedFlashcards));
+            buttonsDiv.querySelector('.questions-btn').addEventListener('click', () => openPopup('questions', encodedQuestions));
+
+            container.appendChild(buttonsDiv);
+            return container;
+        }
+
+        function createUploadArea(chatId) {
+            const uploadDiv = document.createElement('div');
+            uploadDiv.className = 'upload-area';
+            uploadDiv.innerHTML = `
+                <p>Drag and drop your file here or click to browse</p>
+                <input type="file" id="fileInput-${chatId}" accept=".pdf,.txt">
+            `;
+
+            const fileInput = uploadDiv.querySelector(`#fileInput-${chatId}`);
+            uploadDiv.addEventListener('click', () => fileInput.click());
+            uploadDiv.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadDiv.classList.add('dragover');
+            });
+            uploadDiv.addEventListener('dragleave', () => {
+                uploadDiv.classList.remove('dragover');
+            });
+            uploadDiv.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadDiv.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file) handleFileUpload(file, chatId);
+            });
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) handleFileUpload(file, chatId);
+            });
+
+            return uploadDiv;
+        }
+
+        function handleFileUpload(file, chatId) {
+            if (!file.name.endsWith('.pdf') && !file.name.endsWith('.txt')) {
+                alert('Only PDF and TXT files are allowed.');
+                return;
+            }
+            document.getElementById('chatTitle').textContent = 'Processing...';
+            auth.currentUser.getIdToken(true).then(token => {
+                const formData = new FormData();
+                formData.append('file', file);
+                fetch('/upload', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.chatId) {
+                        loadChatContent(data.chatId);
+                        updateChatTitle(data.chatId, file.name);
+                    } else {
+                        alert('Upload failed: ' + (data.error || 'Unknown error'));
+                        document.getElementById('chatTitle').textContent = 'Upload failed.';
+                    }
+                }).catch(error => {
+                    console.error('Upload error:', error);
+                    alert('Upload failed. Please try again.');
+                    document.getElementById('chatTitle').textContent = 'Upload failed.';
+                });
+            });
+        }
+
+        function updateChatTitle(chatId, filename) {
+            const chatLi = document.querySelector(`.sidebar li[data-chat-id="${chatId}"]`);
+            if (chatLi) chatLi.textContent = filename;
+        }
+
+        document.getElementById('newChatButton').addEventListener('click', () => {
+            const chatList = document.getElementById('chatList');
+            const newChatLi = document.createElement('li');
+            const tempChatId = `temp-${Date.now()}`;
+            newChatLi.textContent = 'New Chat';
+            newChatLi.setAttribute('data-chat-id', tempChatId);
+            newChatLi.addEventListener('click', () => {
+                document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('selected'));
+                newChatLi.classList.add('selected');
+                document.getElementById('chatTitle').textContent = 'New Chat';
+                const contentDiv = document.getElementById('chatContent');
+                contentDiv.innerHTML = '';
+                contentDiv.appendChild(createUploadArea(tempChatId));
+            });
+            chatList.insertBefore(newChatLi, chatList.firstChild);
+            newChatLi.click();
+        });
+
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            auth.signOut().then(() => {
+                window.location.href = '/';
+            }).catch(error => {
+                console.error('Logout error:', error);
+                alert('Logout failed. Please try again.');
+            });
+        });
+
+        function openPopup(type, encodedData) {
+            const data = decodeURIComponent(encodedData);
+            const overlay = document.createElement('div');
+            overlay.className = 'popup-overlay';
+            overlay.addEventListener('click', () => closePopup(overlay, popup));
+
+            const popup = document.createElement('div');
+            popup.className = 'popup';
+            popup.innerHTML = '<button class="close-btn">X</button>';
+
+            const closeBtn = popup.querySelector('.close-btn');
+            closeBtn.addEventListener('click', () => closePopup(overlay, popup));
+
+            const content = document.createElement('div');
+            if (type === 'summary') {
+                content.className = 'summary-content';
+                content.innerHTML = `<h3>Summary</h3>${marked.parse(data)}`;
+            } 
+            else if (type === 'flashcards') {
+                const flashcards = JSON.parse(data);
+                content.innerHTML = '<h3>Flashcards</h3>';
+                if (flashcards.length === 0) {
+                    content.innerHTML += '<p>No flashcards available.</p>';
+                } 
+                else {
+                    flashcards.forEach(card => {
+                        const div = document.createElement('div');
+                        div.className = 'flashcard';
+                        div.innerHTML = `<strong>${card.word}</strong>: ${card.definition}`;
+                        content.appendChild(div);
+                    });
+                }
+            } 
+            else if (type === 'questions') {
+                const questions = JSON.parse(data);
+                content.innerHTML = '<h3>Practice Questions</h3>';
+                if (questions.length === 0) {
+                    content.innerHTML += '<p>No questions available.</p>';
+                } 
+                else {
+                    questions.forEach(q => {
+                        const div = document.createElement('div');
+                        div.className = 'question';
+                        div.innerHTML = `
+                            <p>${q.question}</p>
+                            <ul>
+                                <li>${q.options.a}</li>
+                                <li>${q.options.b}</li>
+                                <li>${q.options.c}</li>
+                                <li>${q.options.d}</li>
+                            </ul>
+                            <p><strong>Correct Answer:</strong> ${q.correct_answer}</p>
+                        `;
+                        content.appendChild(div);
+                    });
+                }
+            }
+            popup.appendChild(content);
+
+            document.body.appendChild(overlay);
+            document.body.appendChild(popup);
+        }
+
+        function closePopup(overlay, popup) {
+            document.body.removeChild(overlay);
+            document.body.removeChild(popup);
+        }
+    </script>
+</body>
+</html>
