@@ -1,6 +1,6 @@
 from pathlib import Path
 from google import genai
-from AIFeatures import AIFeatures
+from .AIFeatures import AIFeatures
 import re    
 
 class AIFlashcards(AIFeatures):
@@ -83,4 +83,9 @@ class AIFlashcards(AIFeatures):
     '''
     def get_def(self, word_and_def):
         return word_and_def.get("definition", "").strip()
-    
+
+'''
+ai_features = AIFeatures("AIzaSyCFP_xnzpKf8FBn7Nl1cqOU682IicQykLg", "/Users/gill_/Desktop/notes.pdf")
+ai_flashcards = AIFlashcards(ai_features)
+print(ai_flashcards.generate_content())
+ai_features.delete_all_files()'''

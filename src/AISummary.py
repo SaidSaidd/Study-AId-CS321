@@ -1,6 +1,6 @@
 from pathlib import Path
 from google import genai
-from AIFeatures import AIFeatures
+from .AIFeatures import AIFeatures
 
 class AISummary(AIFeatures):
     '''
