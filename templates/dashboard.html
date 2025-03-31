@@ -83,7 +83,22 @@
         }
         .overview {
             margin-bottom: 20px;
-            white-space: pre-wrap;
+            white-space: pre-wrap; /* Still useful for fallback text */
+            line-height: 1.6; /* Improves readability */
+        }
+        .overview ul {
+            list-style-type: disc;
+            margin-left: 20px;
+        }
+        .overview ol {
+            list-style-type: decimal;
+            margin-left: 20px;
+        }
+        .overview strong {
+            font-weight: bold;
+        }
+        .overview h1, .overview h2, .overview h3 {
+            margin: 10px 0;
         }
         .action-buttons {
             display: flex;
@@ -293,7 +308,7 @@
             const container = document.createElement('div');
             const overviewDiv = document.createElement('div');
             overviewDiv.className = 'overview';
-            overviewDiv.textContent = chat.overview || 'No overview available.';
+            overviewDiv.innerHTML = marked.parse(chat.overview || 'No overview available.');
             container.appendChild(overviewDiv);
 
             const buttonsDiv = document.createElement('div');
