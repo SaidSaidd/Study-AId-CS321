@@ -27,14 +27,16 @@ class AIQuestions(AIFeatures):
                     b.AnswerChoice2  
                     c.AnswerChoice3  
                     d.AnswerChoice4  
-                    b.CorrectAnswer  
+                    b.CorrectAnswer 
+                    Ensure the whitespace matches this format exactly.
                     Do not include any extra text, explanations, or formatting outside this structure.
                     The correct answer at the bottom must start with the corresponding letter (a, b, c, or d).
-                    Ensure at least one answer is correct, and all incorrect answers should be reasonable yet incorrect.
+                    Ensure exactly one answer is correct, and all incorrect answers should be reasonable yet incorrect.
                     There must be exactly one correct answer per question.
                     Generate {self.num_questions} questions based on the content provided. Do not include any introductory or concluding text—only output the questions in the specified format.
                     Add an empty line between questions.
                     If there are example problems in the file, try coming up with a few problems similar to the example problems.
+                    Try righting problems that require application of the material covered in the file and not just vocabulary questions.
                     """
         self.uploaded_file = aiFeatures.uploaded_file
 
@@ -55,12 +57,12 @@ class AIQuestions(AIFeatures):
     def parse_output(self, generated_text):
         questions = []
         pattern = re.compile(
-            r"\s*(\d+)\.\s*(.+?)\n\s*"  # Question number and text
-            r"\s*a\.\s*(.+?)\n\s*"  # Option A
-            r"\s*b\.\s*(.+?)\n\s*"  # Option B
-            r"\s*c\.\s*(.+?)\n\s*"  # Option C
-            r"\s*d\.\s*(.+?)\n\s*s"  # Option D
-            r"\s*([a-d])\.\s*(.+?)(?=\n\s*\d+\.|\n*$)",  # Correct answer, space optional
+            r"\s*(\d+)\.\s*(.+?)\n\s*"
+            r"\s*a\.\s*(.+?)\n\s*"
+            r"\s*b\.\s*(.+?)\n\s*"
+            r"\s*c\.\s*(.+?)\n\s*"
+            r"\s*d\.\s*(.+?)\n\s*"
+            r"\s*([a-d])\.\s*(.+?)(?=\n\s*\d+\.|\n*$)",
             re.DOTALL
         )
 
@@ -76,12 +78,7 @@ class AIQuestions(AIFeatures):
                 },
                 "correct_answer": match.group(7) if match.group(7) is not None else "No correct answer provided"
             }
+            print(question_data)
             questions.append(question_data)
 
         return questions
-
-'''
-ai_features = AIFeatures("AIzaSyCFP_xnzpKf8FBn7Nl1cqOU682IicQykLg", "/Users/gill_/Desktop/notes.pdf")
-ai_questions = AIQuestions(ai_features,5)
-print(ai_questions.generate_content())
-ai_features.delete_all_files()'''
