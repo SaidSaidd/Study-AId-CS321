@@ -22,7 +22,7 @@ if not os.path.exists(UPLOAD_FOLDER):
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Your Google Gemini API key (replace with your actual key)
-GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE"
+GEMINI_API_KEY = "AIzaSyCFP_xnzpKf8FBn7Nl1cqOU682IicQykLg"
 
 @app.route('/')
 def login_page():
@@ -91,7 +91,6 @@ def upload_file():
         questions_content = ai_questions.generate_content()
         questions = ai_questions.parse_output(questions_content)
 
-        ai_features.delete_all_files()
         print('AI processing completed')
 
         chat_data = {
