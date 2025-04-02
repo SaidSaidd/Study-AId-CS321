@@ -751,35 +751,16 @@
                         div.className = 'question';
                         div.innerHTML = `
                             <p>${q.question}</p>
-                              <fieldset>
-                                <div>
-                                    <input type = "radio" id = ${q.options.a} name = "queastion-${q.options.a}", value = ${q.options.a}
-                                    <label for=${q.options.a}>${q.options.a}</label>
-                                    </div>
-
-                                <div>
-                                    <input type = "radio" id = ${q.options.b} name = "question-${q.options.b}", value = ${q.options.b}
-                                    <label for=${q.options.b}>${q.options.b}</label>
-                                    </div>
-                               
-                                <div>
-                                    <input type = "radio" id = ${q.options.c} name = "question-${q.options.c}", value = ${q.options.c}
-                                    <label for=${q.options.c}>${q.options.c}</label>
-                                    </div>
-
-                                 <div>
-                                    <input type = "radio" id = ${q.options.d} name = "question-${q.options.d}", value = ${q.options.d}
-                                    <label for=${q.options.d}>${q.options.d}</label>
-                                    </div>
-
-                                </fieldset>
-
+                            <ul>
+                                <li>${q.options.a}</li>
+                                <li>${q.options.b}</li>
+                                <li>${q.options.c}</li>
+                                <li>${q.options.d}</li>
+                            </ul>
+                            <p><strong>Correct Answer:</strong> ${q.correct_answer}</p>
                         `;
                         content.appendChild(div);
-                        <p><strong>Correct Answer:</strong> ${q.correct_answer}</p>
                     });
-
-                     <input type = "Submit" value = "Submit" />
                 }
             }
             popup.appendChild(content);
