@@ -1,21 +1,20 @@
 from pathlib import Path
-from google import genai
+import google.generativeai as genai
 from .AIFeatures import AIFeatures
 
 class AISummary(AIFeatures):
     '''
-        Parameters:
-            self: this parameter identifies the client user instance of the system
-            aiFeatures: this parameter is an object from AIFeatures and holding the information passed into it from the AIFeatures class 
-        
-        This method summerizes the information saved in the AIFeatures object.
+        Inherits from AIFeatures but customizes the prompt to produce
+        a detailed summary of the file content.
     '''
     def __init__(self, aiFeatures):
-        # take attributes from already initialized aiFeatures variables.
+        self.api_key = aiFeatures.api_key
+        self.model = aiFeatures.model
         self.file_path = aiFeatures.file_path
-        self.client = aiFeatures.client  
-        self.prompt = """Provide a detailed summary of the file provided. 
-                         Split the summary into subsections and make sure all important information from the file is included in the summary. 
-                         Try not defining to many topics. Instead, focus on giving a detialed overview of the contents of the file."
-                      """
-        self.uploaded_file = aiFeatures.uploaded_file
+        self.file_content = aiFeatures.file_content
+
+        self.prompt = (
+            "Provide a detailed summary of the file. Split the summary into logical subsections. "
+            "Focus on covering all key topics concisely, but do not add superfluous detail. "
+            "Do not invent new information. Do not add extraneous commentary."
+        )
