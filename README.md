@@ -9,4 +9,12 @@ Note on adding file path manually during testing: Python will interpret the '\' 
 Additionally, make sure to provide the complete file path from the root directory. 
 
 
-Use Test.py to test any new code. Try not adding test code to the class files themselves.
+Use test_all_classes.py to test any new code. Try not adding test code to the class files themselves.
+
+
+
+Instructions to run front end:
+Firstly, you must install firebase-admin. navigate to C:\Users\Your Name\AppData\Local\Programs\Python\Python313\Scripts and run the command ./pip install firebase-admin.
+Next, from the same directory, install Flask by typing ./pip install Flask.
+
+From there, run the app.py file to run the webpage locally.

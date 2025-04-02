@@ -23,6 +23,7 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+
 @app.route('/')
 def login_page():
     return render_template('login.html')
@@ -109,6 +110,7 @@ def upload_file():
         print(questions, flush=True)
 
         ai_features.delete_all_files()
+        print('AI processing completed')
 
         chat_data = {
             "userId": user_id,

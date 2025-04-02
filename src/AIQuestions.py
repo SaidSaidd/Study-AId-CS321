@@ -1,19 +1,17 @@
 from pathlib import Path
-from google import genai
+import google.generativeai as genai
 from .AIFeatures import AIFeatures
 import re
+
 class AIQuestions(AIFeatures):
     '''
-        Parameters:
-            self: this parameter identifies the client user instance of the system
-            aiFeatures: this parameter is an object from AIFeatures and holding the information passed into it from the AIFeatures class 
-            num_questions: this parameter creates an object for the questions
-        
-        This method takes an AIFeatures object and uses these values to initialize an AIQuestions object.
+        Inherits from AIFeatures but customizes the prompt to generate multiple-choice questions.
     '''
     def __init__(self, aiFeatures, num_questions):
-        # take attributes from already initialized aiFeatures variables.
+        self.api_key = aiFeatures.api_key
+        self.model = aiFeatures.model
         self.file_path = aiFeatures.file_path
+
         self.client = aiFeatures.client  
         self.num_questions = num_questions
         self.prompt = f"""You are given the text content extracted from a PDF file. 
@@ -39,23 +37,32 @@ class AIQuestions(AIFeatures):
                     Try righting problems that require application of the material covered in the file and not just vocabulary questions.
                     """
         self.uploaded_file = aiFeatures.uploaded_file
+        self.file_content = aiFeatures.file_content
 
-    '''
-        Parameters:
-            self: this parameter identifies the client user instance of the system
-            generated_text: this object holds the question and potential answers to the question
-        
-        Returns:
-            This method returns the question object with the question and answers
 
-        This method creates a directory input from Genini output that holds the question, answer, and correct answer. 
 
-        The ways the generated_text object is stored in the directory is explained below: 
-            Each list element has a dictionary that holds the question number, question, choices, correct answer choice, and correct answer text.
-            The choices are stored in a sub dictionary with keys being a-d and values being the text.
-    '''
+
     def parse_output(self, generated_text):
+        '''
+        Parses the generated MCQs into a list of dicts:
+          [
+            {
+              "question_number": 1,
+              "question": "Some question?",
+              "options": {
+                "a": "option A text",
+                "b": "option B text",
+                "c": "option C text",
+                "d": "option D text"
+              },
+              "correct_answer": "a"  # or b/c/d
+            },
+            ...
+          ]
+        '''
         questions = []
+
+        # A fairly naive regex approach – you may want to adjust based on formatting
         pattern = re.compile(
             r"\s*(\d+)\.\s*(.+?)\n\s*"
             r"\s*a\.\s*(.+?)\n\s*"
@@ -67,7 +74,7 @@ class AIQuestions(AIFeatures):
         )
 
         for match in pattern.finditer(generated_text):
-            question_data = {
+            questions.append({
                 "question_number": int(match.group(1)),
                 "question": match.group(2).strip(),
                 "options": {
@@ -76,9 +83,8 @@ class AIQuestions(AIFeatures):
                     "c": match.group(5).strip(),
                     "d": match.group(6).strip(),
                 },
-                "correct_answer": match.group(7) if match.group(7) is not None else "No correct answer provided"
-            }
-            print(question_data)
-            questions.append(question_data)
 
+                "correct_answer": match.group(7) if match.group(7) is not None else "No correct answer provided"
+            })
+            
         return questions
