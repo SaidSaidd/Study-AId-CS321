@@ -54,6 +54,7 @@ class AIQuestions(AIFeatures):
     '''
     def parse_output(self, generated_text):
         questions = []
+        '''      
         pattern = re.compile(
             r"\s*(\d+)\.\s*(.+?)\n\s*"  # Question number and text
             r"\s*a\.\s*(.+?)\n\s*"  # Option A
@@ -61,6 +62,16 @@ class AIQuestions(AIFeatures):
             r"\s*c\.\s*(.+?)\n\s*"  # Option C
             r"\s*d\.\s*(.+?)\n\s*s"  # Option D
             r"\s*([a-d])\.\s*(.+?)(?=\n\s*\d+\.|\n*$)",  # Correct answer, space optional
+            re.DOTALL
+        )
+        '''
+        pattern = re.compile(
+            r"(\d+)\.\s*(.*?)\n"
+            r"a\.\s*(.*?)\n"
+            r"b\.\s*(.*?)\n"
+            r"c\.\s*(.*?)\n"
+            r"d\.\s*(.*?)\n"
+            r"([a-dA-D])\.\s*(.*?)\n?",
             re.DOTALL
         )
 
