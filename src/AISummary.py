@@ -1,5 +1,5 @@
 from pathlib import Path
-import google.generativeai as genai
+from google import genai
 from .AIFeatures import AIFeatures
 
 class AISummary(AIFeatures):
@@ -8,10 +8,9 @@ class AISummary(AIFeatures):
         a detailed summary of the file content.
     '''
     def __init__(self, aiFeatures):
-        self.api_key = aiFeatures.api_key
-        self.model = aiFeatures.model
         self.file_path = aiFeatures.file_path
-        self.file_content = aiFeatures.file_content
+        self.client = aiFeatures.client  
+        self.uploaded_file = aiFeatures.uploaded_file
 
         self.prompt = (
             "Provide a detailed summary of the file. Split the summary into logical subsections. "

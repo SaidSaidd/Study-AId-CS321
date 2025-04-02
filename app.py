@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import os
 import firebase_admin
-from firebase_admin import credentials, firestore, auth  # Explicitly import auth
+from firebase_admin import credentials, firestore, auth
 from src.AIFeatures import AIFeatures
 from src.AISummary import AISummary
 from src.AIFlashcards import AIFlashcards

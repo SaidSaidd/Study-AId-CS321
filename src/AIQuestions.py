@@ -1,5 +1,5 @@
 from pathlib import Path
-import google.generativeai as genai
+from google import genai
 from .AIFeatures import AIFeatures
 import re
 
@@ -8,11 +8,9 @@ class AIQuestions(AIFeatures):
         Inherits from AIFeatures but customizes the prompt to generate multiple-choice questions.
     '''
     def __init__(self, aiFeatures, num_questions):
-        self.api_key = aiFeatures.api_key
-        self.model = aiFeatures.model
         self.file_path = aiFeatures.file_path
-
         self.client = aiFeatures.client  
+        self.uploaded_file = aiFeatures.uploaded_file
         self.num_questions = num_questions
         self.prompt = f"""You are given the text content extracted from a PDF file. 
                     Your task is to generate {self.num_questions} multiple-choice questions (MCQs) based on the content of the file. 
@@ -36,11 +34,6 @@ class AIQuestions(AIFeatures):
                     If there are example problems in the file, try coming up with a few problems similar to the example problems.
                     Try righting problems that require application of the material covered in the file and not just vocabulary questions.
                     """
-        self.uploaded_file = aiFeatures.uploaded_file
-        self.file_content = aiFeatures.file_content
-
-
-
 
     def parse_output(self, generated_text):
         '''
