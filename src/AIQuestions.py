@@ -48,11 +48,15 @@ class AIQuestions(AIFeatures):
           ]
         '''
         questions = []
-
-        # A fairly naive regex approach – you may want to adjust based on formatting
+        
         pattern = re.compile(
-            r"^\s*(\d+)\.\s*(.+?)\s*\n\s*a\.\s*(.+?)\s*\n\s*b\.\s*(.+?)\s*\n\s*c\.\s*(.+?)\s*\n\s*d\.\s*(.+?)\s*\n\s*([a-d])\.\s*(.+)",
-            re.DOTALL | re.MULTILINE
+            r"(\d+)\.\s*(.*?)\n"
+            r"a\.\s*(.*?)\n"
+            r"b\.\s*(.*?)\n"
+            r"c\.\s*(.*?)\n"
+            r"d\.\s*(.*?)\n"
+            r"([a-dA-D])\.\s*(.*?)\n?",
+            re.DOTALL
         )
 
         for match in pattern.finditer(generated_text):
