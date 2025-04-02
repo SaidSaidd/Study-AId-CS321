@@ -1,5 +1,3 @@
-from pathlib import Path
-from google import genai
 from .AIFeatures import AIFeatures
 import re    
 
