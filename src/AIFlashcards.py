@@ -1,5 +1,5 @@
 from pathlib import Path
-import google.generativeai as genai
+from google import genai
 from .AIFeatures import AIFeatures
 import re    
 
@@ -9,27 +9,22 @@ class AIFlashcards(AIFeatures):
         Also adds a utility method create_dict() to parse the output.
     '''
     def __init__(self, aiFeatures):
-        # Copy over relevant attributes from the already-initialized aiFeatures:
-        self.api_key = aiFeatures.api_key
-        self.model = aiFeatures.model
-        self.file_path = aiFeatures.file_path
-        self.file_content = aiFeatures.file_content
-
-        # Override the prompt with more explicit instructions
-        self.prompt = (
-            "You are given the text content extracted from a PDF or TXT file. \n"
-            "Create flashcards by following these EXACT instructions:\n"
-            "1. Identify 5-10 important keywords or concepts from the text.\n"
-            "2. For each keyword, write a clear, concise definition (1-2 sentences).\n"
-            "3. Format each flashcard EXACTLY like this, with a number, colon, term, hyphen, and definition:\n"
-            "   1: Term - Definition\n"
-            "   2: Another Term - Its definition\n\n"
-            "Example format:\n"
-            "1: Photosynthesis - The process by which plants convert sunlight into energy.\n"
-            "2: Cellular Respiration - The process cells use to break down glucose and create ATP.\n\n"
-            "Important: Each line MUST start with a number and colon, followed by the term, then a hyphen, then the definition.\n"
-            "Start your response now, using only the format above with no additional text:"
-        )
+        # take attributes from already initialized aiFeatures variables.
+         self.file_path = aiFeatures.file_path
+         self.client = aiFeatures.client  
+         self.uploaded_file = aiFeatures.uploaded_file
+         self.prompt = """You are given the text content extracted from a PDF file. 
+                          Your task is to: 1. Identify as many key words in the text as you can. 
+                                           2. For each key word, provide a detailed definition that includes relevant context—even if that context is not explicitly mentioned in the PDF.
+                                           3. Output your results as a numbered list, strictly following this format:
+                                              1: Word - Definition.
+                           Make sure that the output contains only the numbered list and nothing else. 
+                           Do not include any additional commentary, explanations, or formatting.
+                           Only pick words that are relevant to the main topic of the file.
+                           For example, if a math file has an example that includes medicine, do not define the medical concepts.
+                           Ignore all words from example problems. Focus on just the notes.
+                           Each words should be relevant to the main topic directly.
+                       """
 
     def generate_content(self):
         '''Override parent method to add error checking'''
@@ -41,37 +36,18 @@ class AIFlashcards(AIFeatures):
         return content
 
     def create_dict(self, generated_content):
-        '''
-            Parse the generated text into a dictionary of flashcards.
-            Now with improved error handling and a more robust regex pattern.
-        '''
-        result_dict = {}
-        if not generated_content or not generated_content.strip():
-            print("Warning: No content to parse for flashcards")
-            return result_dict
-
-        # More flexible regex pattern that can handle various whitespace and formatting
-        pattern = r'(?m)^\s*(\d+)\s*:\s*([^-]+?)\s*-\s*(.+?)(?=\s*(?:\d+\s*:|$))'
-        matches = re.finditer(pattern, generated_content)
-        
-        for match in matches:
-            num = match.group(1).strip()
-            word = match.group(2).strip()
-            definition = match.group(3).strip()
-            
-            if word and definition:  # Only add if both word and definition are non-empty
-                result_dict[num] = {
-                    "word": word,
-                    "definition": definition
-                }
-                print(f"Parsed flashcard {num}: {word} - {definition}")  # Debug output
-            else:
-                print(f"Warning: Skipped invalid flashcard format at number {num}")
-
-        if not result_dict:
-            print("Warning: No valid flashcards were parsed from the content")
-            
-        return result_dict
+         self.result_dict = {}
+ 
+         pattern = r'(?m)^\s*(?P<num>\d+):\s*(?P<word>.*?)\s*-\s*(?P<definition>.*?)(?=\n\s*\d+:|\Z)'
+ 
+         matches = re.finditer(pattern, generated_content)
+         for match in matches:
+             num = match.group("num").strip()
+             word = match.group("word").strip()
+             definition = match.group("definition").strip()
+             self.result_dict[num] = {"word": word, "definition": definition}
+ 
+         return self.result_dict
 
     def get_word(self, word_and_def):
         return word_and_def.get("word", "").strip()

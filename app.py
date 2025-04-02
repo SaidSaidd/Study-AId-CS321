@@ -12,17 +12,14 @@ import time
 
 app = Flask(__name__)
 
-# Initialize Firebase Admin SDK
 cred = credentials.Certificate('serviceAccountKey.json')
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-# Directory for file uploads
 UPLOAD_FOLDER = 'uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
 
 @app.route('/')
 def login_page():
@@ -54,7 +51,7 @@ def upload_file():
 
     try:
         decoded_token = auth.verify_id_token(token)
-        user_id = decoded_token['uid']  # Normalized by Firebase SDK
+        user_id = decoded_token['uid']
     except auth.InvalidIdTokenError as e:
         if "Token used too early" in str(e):
             try:
@@ -110,7 +107,6 @@ def upload_file():
         print(questions, flush=True)
 
         ai_features.delete_all_files()
-        print('AI processing completed')
 
         chat_data = {
             "userId": user_id,
