@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Study AId</title>
+    <title>Study Dashboard</title>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -210,14 +210,12 @@
             padding: 20px;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
-
         .flashcard-container {
             perspective: 1000px;
             height: 400px;
             margin: 30px 0;
             position: relative;
         }
-
         .flashcard {
             position: relative;
             width: 100%;
@@ -225,11 +223,9 @@
             transform-style: preserve-3d;
             transition: transform 0.6s;
         }
-
         .flashcard.is-flipped {
             transform: rotateX(180deg);
         }
-
         .flashcard-front,
         .flashcard-back {
             position: absolute;
@@ -245,28 +241,24 @@
             background: white;
             box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.15);
         }
-
         .flashcard-front {
             background: #fff;
             color: #303545;
             font-size: 2em;
             font-weight: 600;
         }
-
         .flashcard-back {
-            background: #303545;
+            background: #4255ff;
             color: white;
             transform: rotateX(180deg);
             font-size: 1.5em;
         }
-
         .flashcard-controls {
             display: flex;
             justify-content: center;
             gap: 20px;
             margin-top: 30px;
         }
-
         .flashcard-btn {
             padding: 12px 24px;
             border: none;
@@ -279,20 +271,17 @@
             transition: all 0.2s ease;
             box-shadow: 0 2px 4px rgba(66, 85, 255, 0.2);
         }
-
         .flashcard-btn:hover {
             background: #2b3db8;
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(66, 85, 255, 0.3);
         }
-
         .flashcard-progress {
             text-align: center;
             margin-top: 20px;
             color: #586380;
             font-size: 0.9em;
         }
-
         .flashcard-progress-bar {
             width: 100%;
             height: 8px;
@@ -301,20 +290,17 @@
             margin-top: 10px;
             overflow: hidden;
         }
-
         .progress-fill {
             height: 100%;
             background: #4255ff;
             transition: width 0.3s ease;
         }
-
         .keyboard-shortcuts {
             text-align: center;
             margin-top: 20px;
             color: #586380;
             font-size: 0.85em;
         }
-
         .keyboard-shortcuts span {
             display: inline-block;
             padding: 3px 8px;
@@ -324,7 +310,6 @@
             color: #586380;
             font-weight: 600;
         }
-
         /* Flashcard mode overlay */
         .flashcard-mode {
             position: fixed;
@@ -337,7 +322,6 @@
             display: none;
             overflow-y: auto;
         }
-
         .flashcard-mode-header {
             display: flex;
             justify-content: space-between;
@@ -346,20 +330,18 @@
             background: white;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-
         .close-flashcards {
             padding: 8px 16px;
             border: none;
             border-radius: 4px;
-            background: #4255ff;
-            color: #e9ebf0;
+            background: #e9ebf0;
+            color: #303545;
             cursor: pointer;
             font-weight: 600;
             transition: background 0.2s;
         }
-
         .close-flashcards:hover {
-            background: #4255ff;
+            background: #d1d4dd;
         }
     </style>
 </head>
@@ -378,7 +360,6 @@
                 <h2 id="chatTitle">Select a chat or upload a new file</h2>
                 <div id="chatContent"></div>
             </div>
-
             <!-- Flashcard Mode -->
             <div class="flashcard-mode">
                 <div class="flashcard-mode-header">
@@ -410,7 +391,6 @@
             </div>
         </div>
     </div>
-
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyAFZH6hrEFhv18ayF3M6DZMN4u0tM-wSaM",
@@ -421,11 +401,9 @@
             appId: "1:1003476902696:web:4c4e47f83a76800212e61d",
             measurementId: "G-NXEYHM1DWV"
         };
-
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
-
         auth.onAuthStateChanged(user => {
             if (user) {
                 if (user.emailVerified) {
@@ -441,7 +419,6 @@
                 window.location.href = '/';
             }
         });
-
         function loadChats(uid) {
             console.log('Loading chats for UID:', uid);
             db.collection('chats')
@@ -472,12 +449,10 @@
                     document.getElementById('chatTitle').textContent = 'Error loading chats: ' + error.message;
                 });
         }
-
         function loadChatContent(chatId) {
             document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('selected'));
             const selectedLi = document.querySelector(`.sidebar li[data-chat-id="${chatId}"]`);
             if (selectedLi) selectedLi.classList.add('selected');
-
             db.collection('chats').doc(chatId).get().then(doc => {
                 if (doc.exists) {
                     const chat = doc.data();
@@ -491,7 +466,6 @@
                 document.getElementById('chatTitle').textContent = 'Error loading chat.';
             });
         }
-
         function createChatDisplay(chat) {
             const container = document.createElement('div');
             
@@ -503,7 +477,6 @@
             overviewDiv.className = 'overview';
             overviewDiv.innerHTML = marked.parse(chat.overview || 'No overview available.');
             container.appendChild(overviewDiv);
-
             // Action buttons
             const buttonsDiv = document.createElement('div');
             buttonsDiv.className = 'action-buttons';
@@ -516,7 +489,6 @@
                 <button class="flashcards-btn" data-content="${encodedFlashcards}">Flashcards</button>
                 <button class="questions-btn" data-content="${encodedQuestions}">Questions</button>
             `;
-
             // Add event listeners for buttons
             buttonsDiv.querySelector('.summary-btn').addEventListener('click', () => openPopup('summary', encodedSummary));
             buttonsDiv.querySelector('.flashcards-btn').addEventListener('click', () => {
@@ -528,11 +500,9 @@
                 }
             });
             buttonsDiv.querySelector('.questions-btn').addEventListener('click', () => openPopup('questions', encodedQuestions));
-
             container.appendChild(buttonsDiv);
             return container;
         }
-
         function createUploadArea(chatId) {
             const uploadDiv = document.createElement('div');
             uploadDiv.className = 'upload-area';
@@ -540,7 +510,6 @@
                 <p>Drag and drop your file here or click to browse</p>
                 <input type="file" id="fileInput-${chatId}" accept=".pdf,.txt">
             `;
-
             const fileInput = uploadDiv.querySelector(`#fileInput-${chatId}`);
             uploadDiv.addEventListener('click', () => fileInput.click());
             uploadDiv.addEventListener('dragover', (e) => {
@@ -560,10 +529,8 @@
                 const file = e.target.files[0];
                 if (file) handleFileUpload(file, chatId);
             });
-
             return uploadDiv;
         }
-
         function handleFileUpload(file, chatId) {
             if (!file.name.endsWith('.pdf') && !file.name.endsWith('.txt')) {
                 alert('Only PDF and TXT files are allowed.');
@@ -596,12 +563,10 @@
                 });
             });
         }
-
         function updateChatTitle(chatId, filename) {
             const chatLi = document.querySelector(`.sidebar li[data-chat-id="${chatId}"]`);
             if (chatLi) chatLi.textContent = filename;
         }
-
         function initializeFlashcards(flashcardsData) {
             flashcards = flashcardsData;
             currentCardIndex = 0;
@@ -613,30 +578,25 @@
             const card = document.querySelector('.flashcard');
             card.classList.remove('is-flipped');
         }
-
         function updateFlashcardDisplay() {
             if (flashcards.length === 0) {
                 document.querySelector('.flashcard-mode').style.display = 'none';
                 return;
             }
-
             const card = flashcards[currentCardIndex];
             const frontEl = document.querySelector('.flashcard-front');
             const backEl = document.querySelector('.flashcard-back');
             const progressEl = document.getElementById('cardProgress');
             const progressFill = document.querySelector('.progress-fill');
-
             frontEl.textContent = card.word;
             backEl.textContent = card.definition;
             progressEl.textContent = `Card ${currentCardIndex + 1} of ${flashcards.length}`;
             progressFill.style.width = `${((currentCardIndex + 1) / flashcards.length) * 100}%`;
         }
-
         function flipCard() {
             const card = document.querySelector('.flashcard');
             card.classList.toggle('is-flipped');
         }
-
         function nextCard() {
             if (currentCardIndex < flashcards.length - 1) {
                 currentCardIndex++;
@@ -645,7 +605,6 @@
                 updateFlashcardDisplay();
             }
         }
-
         function prevCard() {
             if (currentCardIndex > 0) {
                 currentCardIndex--;
@@ -654,7 +613,6 @@
                 updateFlashcardDisplay();
             }
         }
-
         // Event listeners for flashcard controls
         document.getElementById('flipCard').addEventListener('click', flipCard);
         document.getElementById('nextCard').addEventListener('click', nextCard);
@@ -662,7 +620,6 @@
         document.querySelector('.close-flashcards').addEventListener('click', () => {
             document.querySelector('.flashcard-mode').style.display = 'none';
         });
-
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if (document.querySelector('.flashcard-mode').style.display === 'block') {
@@ -678,7 +635,6 @@
                 }
             }
         });
-
         document.getElementById('newChatButton').addEventListener('click', () => {
             const chatList = document.getElementById('chatList');
             const newChatLi = document.createElement('li');
@@ -696,7 +652,6 @@
             chatList.insertBefore(newChatLi, chatList.firstChild);
             newChatLi.click();
         });
-
         document.getElementById('logoutButton').addEventListener('click', () => {
             auth.signOut().then(() => {
                 window.location.href = '/';
@@ -705,20 +660,16 @@
                 alert('Logout failed. Please try again.');
             });
         });
-
         function openPopup(type, encodedData) {
             const data = decodeURIComponent(encodedData);
             const overlay = document.createElement('div');
             overlay.className = 'popup-overlay';
             overlay.addEventListener('click', () => closePopup(overlay, popup));
-
             const popup = document.createElement('div');
             popup.className = 'popup';
             popup.innerHTML = '<button class="close-btn">X</button>';
-
             const closeBtn = popup.querySelector('.close-btn');
             closeBtn.addEventListener('click', () => closePopup(overlay, popup));
-
             const content = document.createElement('div');
             if (type === 'summary') {
                 content.className = 'summary-content';
@@ -758,17 +709,38 @@
                                 <li>${q.options.d}</li>
                             </ul>
                             <p><strong>Correct Answer:</strong> ${q.correct_answer}</p>
+                              <fieldset>
+                                <div>
+                                    <input type = "radio" id = ${q.options.a} name = "queastion-${q.options.a}", value = ${q.options.a}
+                                    <label for=${q.options.a}>${q.options.a}</label>
+                                    </div>
+                                <div>
+                                    <input type = "radio" id = ${q.options.b} name = "question-${q.options.b}", value = ${q.options.b}
+                                    <label for=${q.options.b}>${q.options.b}</label>
+                                    </div>
+                               
+                                <div>
+                                    <input type = "radio" id = ${q.options.c} name = "question-${q.options.c}", value = ${q.options.c}
+                                    <label for=${q.options.c}>${q.options.c}</label>
+                                    </div>
+                                 <div>
+                                    <input type = "radio" id = ${q.options.d} name = "question-${q.options.d}", value = ${q.options.d}
+                                    <label for=${q.options.d}>${q.options.d}</label>
+                                    </div>
+                                </fieldset>
+                                <p><strong>Correct Answer:</strong> ${q.correct_answer}</p>
+                                <input type = "Submit" value = "Submit" />
                         `;
                         content.appendChild(div);
                     });
+
+                     
                 }
             }
             popup.appendChild(content);
-
             document.body.appendChild(overlay);
             document.body.appendChild(popup);
         }
-
         function closePopup(overlay, popup) {
             document.body.removeChild(overlay);
             document.body.removeChild(popup);
