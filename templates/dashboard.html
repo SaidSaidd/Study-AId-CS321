@@ -203,6 +203,21 @@
         .popup .summary-content strong {
             font-weight: bold;
         }
+        .popup .summary-content h2 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            font-size: 1.3em;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .popup .summary-section {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            background-color: #f9f9f9;
+        }
         .flashcard-section {
             display: none;
             max-width: 900px;
@@ -722,7 +737,44 @@
             const content = document.createElement('div');
             if (type === 'summary') {
                 content.className = 'summary-content';
-                content.innerHTML = `<h3>Summary</h3>${marked.parse(data)}`;
+                content.innerHTML = `<h3>Summary</h3>`;
+                
+                // Parse the markdown content
+                const parsedContent = marked.parse(data);
+                
+                // Create a temporary div to hold the parsed content
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = parsedContent;
+                
+                // Find all h2 elements and create sections
+                const h2Elements = tempDiv.querySelectorAll('h2');
+                
+                if (h2Elements.length > 0) {
+                    // Process each h2 and its content as a section
+                    h2Elements.forEach((h2, index) => {
+                        let sectionContent = '';
+                        let nextElement = h2.nextElementSibling;
+                        
+                        // Create a section div
+                        const sectionDiv = document.createElement('div');
+                        sectionDiv.className = 'summary-section';
+                        sectionDiv.appendChild(h2.cloneNode(true));
+                        
+                        // Collect all elements until the next h2 or end
+                        while (nextElement && nextElement.tagName !== 'H2') {
+                            sectionDiv.appendChild(nextElement.cloneNode(true));
+                            nextElement = nextElement.nextElementSibling;
+                        }
+                        
+                        content.appendChild(sectionDiv);
+                    });
+                } else {
+                    // If no h2 elements, just add the content as a single section
+                    const sectionDiv = document.createElement('div');
+                    sectionDiv.className = 'summary-section';
+                    sectionDiv.innerHTML = parsedContent;
+                    content.appendChild(sectionDiv);
+                }
             } 
             else if (type === 'flashcards') {
                 const flashcards = JSON.parse(data);

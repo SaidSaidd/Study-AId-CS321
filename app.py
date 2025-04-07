@@ -92,7 +92,8 @@ def upload_file():
         ai_features = AIFeatures("AIzaSyCFP_xnzpKf8FBn7Nl1cqOU682IicQykLg", file_path)
         overview = ai_features.generate_content()
         ai_summary = AISummary(ai_features)
-        summary = ai_summary.generate_content()
+        summary_content = ai_summary.generate_content()
+        summary = ai_summary.format_for_display(summary_content)
 
         ai_flashcards = AIFlashcards(ai_features)
         flashcards_content = ai_flashcards.generate_content()

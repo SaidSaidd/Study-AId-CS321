@@ -178,3 +178,28 @@ def test_create_AISummary_instance(ai_features):
     assert ai_summary.client == ai_features.client
     assert ai_summary.prompt is not None
     assert ai_summary.uploaded_file == ai_features.uploaded_file
+    assert hasattr(ai_summary, 'sections')
+    assert isinstance(ai_summary.sections, dict)
+
+def test_AISummary_parse_sections(ai_features):
+    ai_summary = AISummary(ai_features)
+    test_content = "## Introduction\nThis is an introduction.\n\n## Main Content\nThis is the main content.\n\n## Conclusion\nThis is a conclusion."
+    
+    sections = ai_summary.parse_sections(test_content)
+    
+    assert len(sections) == 3
+    assert sections["1"]["title"] == "Introduction"
+    assert sections["1"]["content"] == "This is an introduction."
+    assert sections["2"]["title"] == "Main Content"
+    assert sections["3"]["title"] == "Conclusion"
+
+def test_AISummary_format_for_display(ai_features):
+    ai_summary = AISummary(ai_features)
+    test_content = "## Introduction\nThis is an introduction.\n\n## Conclusion\nThis is a conclusion."
+    
+    formatted = ai_summary.format_for_display(test_content)
+    
+    assert "## Introduction" in formatted
+    assert "## Conclusion" in formatted
+    assert "This is an introduction." in formatted
+    assert "This is a conclusion." in formatted
