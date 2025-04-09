@@ -531,12 +531,14 @@
             });
             return uploadDiv;
         }
+        
         function handleFileUpload(file, chatId) {
             if (!file.name.endsWith('.pdf') && !file.name.endsWith('.txt')) {
                 alert('Only PDF and TXT files are allowed.');
                 return;
             }
-            document.getElementById('chatTitle').textContent = 'Processing...';
+            document.getElementById('chatTitle').innerHTML = 'Processing<span id="loadingDots"></span>';
+            const loadingInterval = animateDots();
             auth.currentUser.getIdToken(true).then(token => {
                 const formData = new FormData();
                 formData.append('file', file);
@@ -549,6 +551,7 @@
                 })
                 .then(response => response.json())
                 .then(data => {
+                    clearInterval(loadingInterval);
                     if (data.chatId) {
                         loadChatContent(data.chatId);
                         updateChatTitle(data.chatId, file.name);
@@ -557,11 +560,21 @@
                         document.getElementById('chatTitle').textContent = 'Upload failed.';
                     }
                 }).catch(error => {
+                    clearInterval(loadingInterval);
                     console.error('Upload error:', error);
                     alert('Upload failed. Please try again.');
                     document.getElementById('chatTitle').textContent = 'Upload failed.';
                 });
             });
+        }   
+        function animateDots() {
+            const dots = document.getElementById('loadingDots');
+            let count = 0;
+            const maxDots = 3;
+            return setInterval(() => {
+                count = (count + 1) % (maxDots + 1);
+                dots.textContent = '.'.repeat(count);
+            }, 500);
         }
         function updateChatTitle(chatId, filename) {
             const chatLi = document.querySelector(`.sidebar li[data-chat-id="${chatId}"]`);
