@@ -41,6 +41,7 @@
             cursor: pointer;
             border-bottom: 1px solid #34495e;
             transition: background 0.3s;
+            position: relative;
         }
         .sidebar li:hover {
             background: #34495e;
@@ -48,6 +49,30 @@
         .sidebar li.selected {
             background: #1abc9c;
             font-weight: bold;
+        }
+        .delete-chat-btn {
+            display: none;
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            opacity: 0.7;
+        }
+        .sidebar li:hover .delete-chat-btn {
+            display: inline-block;
+        }
+        .delete-chat-btn img {
+            width: 18px;
+            height: 18px;
+            filter: grayscale(1) brightness(2.2);
+            transition: filter 0.2s;
+        }
+        .delete-chat-btn:hover img {
+            filter: none;
         }
         .main {
             margin-left: 250px;
@@ -469,9 +494,32 @@
                         snapshot.forEach(doc => {
                             const chat = doc.data();
                             const li = document.createElement('li');
-                            li.textContent = chat.filename || `Chat ${doc.id}`;
+                            li.innerHTML = `<span class="chat-title">${chat.filename || `Chat ${doc.id}`}</span>
+                            <button class="delete-chat-btn" title="Delete chat">
+                                <img src="/static/icons/delete_chat.png" alt="Delete">
+                            </button>`;
                             li.setAttribute('data-chat-id', doc.id);
-                            li.addEventListener('click', () => loadChatContent(doc.id));
+                            li.addEventListener('click', (e) => {
+                                // Prevent click if delete button was clicked
+                                if (e.target.closest('.delete-chat-btn')) return;
+                                loadChatContent(doc.id);
+                            });
+                            // Delete button handler
+                            li.querySelector('.delete-chat-btn').addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                if (confirm('Are you sure you want to delete this chat?')) {
+                                    db.collection('chats').doc(doc.id).delete().then(() => {
+                                        li.remove();
+                                        // Optionally clear chat content if deleted chat was selected
+                                        if (li.classList.contains('selected')) {
+                                            document.getElementById('chatTitle').textContent = 'Select a chat or upload a new file';
+                                            document.getElementById('chatContent').innerHTML = '';
+                                        }
+                                    }).catch(err => {
+                                        alert('Failed to delete chat: ' + err.message);
+                                    });
+                                }
+                            });
                             chatList.appendChild(li);
                         });
                         const firstChatId = snapshot.docs[0].id;
