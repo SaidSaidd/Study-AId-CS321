@@ -94,7 +94,17 @@
             </div>
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" required>
+                <input type="password" id="password" required>  
+            </div>
+            <div class="form-group" style="margin-bottom: 10px;">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" required>
+                <ul id="passwordRequirements" style="color: grey; font-size: 0.9em; margin-top: 5px; padding-left: 20px; list-style-type: disc;">
+                    <li id="rule-length">Password must be at least 8 characters</li>
+                    <li id="rule-uppercase">Include an uppercase letter</li>
+                    <li id="rule-number">Include a number</li>
+                    <li id="rule-symbol">Include a special character</li>
+                </ul>
             </div>
             <button type="button" id="signupButton">Sign Up</button>
             <div class="links">
@@ -117,33 +127,76 @@
             appId: "1:1003476902696:web:4c4e47f83a76800212e61d",
             measurementId: "G-NXEYHM1DWV"
         };
-
+    
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
+    
+        function validatePassword(password) {
+            const minLength = /.{8,}/;
+            const hasUpper = /[A-Z]/;
+            const hasNumber = /[0-9]/;
+            const hasSymbol = /[^A-Za-z0-9]/;
+            return minLength.test(password) &&
+                   hasUpper.test(password) &&
+                   hasNumber.test(password) &&
+                   hasSymbol.test(password);
+        }
+        document.getElementById('password').addEventListener('input', function () {
+            const password = this.value;
+
+            document.getElementById('rule-length').style.color =
+                /.{8,}/.test(password) ? 'green' : 'grey';
+
+            document.getElementById('rule-uppercase').style.color =
+                /[A-Z]/.test(password) ? 'green' : 'grey';
+
+            document.getElementById('rule-number').style.color =
+                /[0-9]/.test(password) ? 'green' : 'grey';
+
+            document.getElementById('rule-symbol').style.color =
+                /[^A-Za-z0-9]/.test(password) ? 'green' : 'grey';
+        });
 
         auth.onAuthStateChanged(user => {
             if (user && user.emailVerified) {
                 window.location.href = '/dashboard.html';
             }
         });
-
-        document.getElementById('signupButton').addEventListener('click', function() {
-            const email = document.getElementById('email').value;
+    
+        document.getElementById('signupButton').addEventListener('click', function () {
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const errorBox = document.getElementById('errorMessage');
+    
+            errorBox.innerText = ''; // Reset error message
+    
+            if (password !== confirmPassword) {
+                errorBox.innerText = "Passwords do not match.";
+                return;
+            }
+    
+            if (!validatePassword(password)) {
+                errorBox.innerText = "Password must be at least 8 characters, include an uppercase letter, a number, and a special character.";
+                return;
+            }
+    
             auth.createUserWithEmailAndPassword(email, password)
                 .then(userCredential => {
                     userCredential.user.sendEmailVerification()
                         .then(() => {
                             alert("A verification email has been sent. Please check your inbox and verify your email before logging in.");
                             auth.signOut();
-                            window.location.href = '/'; // Redirect to login after sign-up
+                            window.location.href = '/';
                         })
                         .catch(error => {
-                            document.getElementById('errorMessage').innerText = "Error sending verification email: " + error.message;
+                            errorBox.innerText = "Error sending verification email: " + error.message;
                         });
                 })
-                .catch(error => document.getElementById('errorMessage').innerText = error.message);
+                .catch(error => {
+                    errorBox.innerText = error.message;
+                });
         });
-    </script>
+    </script>    
 </body>
 </html>
