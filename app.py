@@ -100,7 +100,7 @@ def upload_file():
         flashcards_dict = ai_flashcards.create_dict(flashcards_content)
         flashcards = [{"word": ai_flashcards.get_word(v), "definition": ai_flashcards.get_def(v)} for v in flashcards_dict.values()]
 
-        num_questions = 5
+        num_questions = 100
         ai_questions = AIQuestions(ai_features, num_questions)
         questions_content = ai_questions.generate_content()
         print(questions_content, flush=True)
