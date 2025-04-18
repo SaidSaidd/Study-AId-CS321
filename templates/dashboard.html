@@ -401,70 +401,66 @@
         .close-flashcards:hover {
             background: #d1d4dd;
         }
-
         /* ========= Summary Mode ========= */
         .summary-mode {
-        display: none;
+            display: none;
         }
         .summary-section {
-        max-width: 900px;
-        margin: 30px auto;
-        padding: 40px;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 0.25rem 1rem rgba(0,0,0,0.15);
-        color: #303545;
-        line-height: 1.6;
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 0.25rem 1rem rgba(0,0,0,0.15);
+            color: #303545;
+            line-height: 1.6;
         }
         .summary-header-btns {
-        display: flex;
-        gap: 8px;
+            display: flex;
+            gap: 8px;
         }
         .copy-summary,
         .close-summary {
-        padding: 8px 16px;
-        border: none;
-        border-radius: 4px;
-        background: #e9ebf0;
-        color: #303545;
-        cursor: pointer;
-        font-weight: 600;
-        transition: background 0.2s;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background: #e9ebf0;
+            color: #303545;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
         }
         .copy-summary:hover,
         .close-summary:hover {
-        background: #d1d4dd;
+            background: #d1d4dd;
         }
-
         /* ========= Question Mode ========= */
         .question-mode {
-        display: none;
+            display: none;
         }
         .question-section {
-        max-width: 900px;
-        margin: 30px auto;
-        padding: 40px;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 0.25rem 1rem rgba(0,0,0,0.15);
-        color: #303545;
-        line-height: 1.6;
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 0.25rem 1rem rgba(0,0,0,0.15);
+            color: #303545;
+            line-height: 1.6;
         }
         .close-questions {
-        padding: 8px 16px;
-        border: none;
-        border-radius: 4px;
-        background: #e9ebf0;
-        color: #303545;
-        cursor: pointer;
-        font-weight: 600;
-        transition: background 0.2s;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background: #e9ebf0;
+            color: #303545;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
         }
         .close-questions:hover {
-        background: #d1d4dd;
+            background: #d1d4dd;
         }
-
-
     </style>
 </head>
 <body>
@@ -514,25 +510,24 @@
             <!-- Summary Mode -->
             <div class="flashcard-mode summary-mode">
                 <div class="flashcard-mode-header">
-                <h2>Summary</h2>
-                <div class="summary-header-btns">
-                    <button class="copy-summary">Copy</button>
-                    <button class="close-summary">Exit</button>
-                </div>
+                    <h2>Summary</h2>
+                    <div class="summary-header-btns">
+                        <button class="copy-summary">Copy</button>
+                        <button class="close-summary">Exit</button>
+                    </div>
                 </div>
                 <div class="summary-section">
-                <!-- rendered Markdown goes here -->
+                    <!-- rendered Markdown goes here -->
                 </div>
             </div>
-            
             <!-- Question Mode -->
             <div class="flashcard-mode question-mode">
                 <div class="flashcard-mode-header">
-                <h2>Practice Questions</h2>
-                <button class="close-questions">Exit</button>
+                    <h2>Practice Questions</h2>
+                    <button class="close-questions">Exit</button>
                 </div>
                 <div class="question-section">
-                <!-- generated questions go here -->
+                    <!-- generated questions go here -->
                 </div>
             </div>
         </div>
@@ -550,21 +545,25 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
+
+        // Declare global variables for flashcards
+        let flashcards = [];
+        let currentCardIndex = 0;
+
         auth.onAuthStateChanged(user => {
             if (user) {
                 if (user.emailVerified) {
                     loadChats(user.uid);
-                } 
-                else {
+                } else {
                     auth.signOut().then(() => {
                         window.location.href = '/';
                     });
                 }
-            } 
-            else {
+            } else {
                 window.location.href = '/';
             }
         });
+
         function loadChats(uid) {
             console.log('Loading chats for UID:', uid);
             db.collection('chats')
@@ -577,8 +576,7 @@
                     if (snapshot.empty) {
                         document.getElementById('chatTitle').textContent = 'No chats yet. Upload a file to start.';
                         document.getElementById('chatContent').innerHTML = '';
-                    } 
-                    else {
+                    } else {
                         snapshot.forEach(doc => {
                             const chat = doc.data();
                             const li = document.createElement('li');
@@ -588,17 +586,14 @@
                             </button>`;
                             li.setAttribute('data-chat-id', doc.id);
                             li.addEventListener('click', (e) => {
-                                // Prevent click if delete button was clicked
                                 if (e.target.closest('.delete-chat-btn')) return;
                                 loadChatContent(doc.id);
                             });
-                            // Delete button handler
                             li.querySelector('.delete-chat-btn').addEventListener('click', (e) => {
                                 e.stopPropagation();
                                 if (confirm('Are you sure you want to delete this chat?')) {
                                     db.collection('chats').doc(doc.id).delete().then(() => {
                                         li.remove();
-                                        // Optionally clear chat content if deleted chat was selected
                                         if (li.classList.contains('selected')) {
                                             document.getElementById('chatTitle').textContent = 'Select a chat or upload a new file';
                                             document.getElementById('chatContent').innerHTML = '';
@@ -618,6 +613,7 @@
                     document.getElementById('chatTitle').textContent = 'Error loading chats: ' + error.message;
                 });
         }
+
         function loadChatContent(chatId) {
             document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('selected'));
             const selectedLi = document.querySelector(`.sidebar li[data-chat-id="${chatId}"]`);
@@ -635,33 +631,27 @@
                 document.getElementById('chatTitle').textContent = 'Error loading chat.';
             });
         }
+
         function createChatDisplay(chat) {
             const container = document.createElement('div');
-            
-            // Set chat title
             document.getElementById('chatTitle').textContent = chat.filename || 'Chat';
-            
-            // Overview section
             const overviewDiv = document.createElement('div');
             overviewDiv.className = 'overview';
             overviewDiv.innerHTML = marked.parse(chat.overview || 'No overview available.');
             container.appendChild(overviewDiv);
-            // Action buttons
             const buttonsDiv = document.createElement('div');
             buttonsDiv.className = 'action-buttons';
             const encodedSummary = encodeURIComponent(chat.summary || 'No summary available.');
             const encodedFlashcards = encodeURIComponent(JSON.stringify(chat.flashcards || []));
             const encodedQuestions = encodeURIComponent(JSON.stringify(chat.questions || []));
-            
             buttonsDiv.innerHTML = `
                 <button class="summary-btn" data-content="${encodedSummary}">Summary</button>
                 <button class="flashcards-btn" data-content="${encodedFlashcards}">Flashcards</button>
                 <button class="questions-btn" data-content="${encodedQuestions}">Questions</button>
             `;
-            // Add event listeners for buttons
             buttonsDiv.querySelector('.summary-btn').addEventListener('click', () => {
                 const rawMd = decodeURIComponent(encodedSummary);
-                const html  = marked.parse(rawMd);
+                const html = marked.parse(rawMd);
                 document.querySelector('.summary-section').innerHTML = html;
                 document.querySelector('.summary-mode').style.display = 'block';
             });
@@ -676,8 +666,7 @@
             buttonsDiv.querySelector('.questions-btn').addEventListener('click', () => {
                 const qs = JSON.parse(decodeURIComponent(encodedQuestions));
                 const section = document.querySelector('.question-section');
-
-                section.innerHTML = qs.map((q,i) => `
+                section.innerHTML = qs.map((q, i) => `
                     <div class="question" data-correct="${q.correct_answer}">
                     <p><strong>Q${i+1}:</strong> ${q.question}</p>
                     <div class="options">
@@ -691,12 +680,12 @@
                     <div class="feedback" style="margin-top:8px; font-weight:600;"></div>
                     </div>
                 `).join('');
-
                 document.querySelector('.question-mode').style.display = 'block';
             });
             container.appendChild(buttonsDiv);
             return container;
         }
+
         function createUploadArea(chatId) {
             const uploadDiv = document.createElement('div');
             uploadDiv.className = 'upload-area';
@@ -725,7 +714,7 @@
             });
             return uploadDiv;
         }
-        
+
         function handleFileUpload(file, chatId) {
             if (!file.name.endsWith('.pdf') && !file.name.endsWith('.txt')) {
                 alert('Only PDF and TXT files are allowed.');
@@ -760,7 +749,8 @@
                     document.getElementById('chatTitle').textContent = 'Upload failed.';
                 });
             });
-        }   
+        }
+
         function animateDots() {
             const dots = document.getElementById('loadingDots');
             let count = 0;
@@ -770,30 +760,22 @@
                 dots.textContent = '.'.repeat(count);
             }, 500);
         }
-        function animateDots() {
-            const dots = document.getElementById('loadingDots');
-            let count = 0;
-            const maxDots = 3;
-            return setInterval(() => {
-                count = (count + 1) % (maxDots + 1);
-                dots.textContent = '.'.repeat(count);
-            }, 500);
-        }
+
         function updateChatTitle(chatId, filename) {
             const chatLi = document.querySelector(`.sidebar li[data-chat-id="${chatId}"]`);
             if (chatLi) chatLi.textContent = filename;
         }
+
         function initializeFlashcards(flashcardsData) {
             flashcards = flashcardsData;
             currentCardIndex = 0;
             updateFlashcardDisplay();
             document.querySelector('.flashcard-mode').style.display = 'block';
             document.querySelector('.flashcard-section').style.display = 'block';
-            
-            // Reset card flip state
             const card = document.querySelector('.flashcard');
             card.classList.remove('is-flipped');
         }
+
         function updateFlashcardDisplay() {
             if (flashcards.length === 0) {
                 document.querySelector('.flashcard-mode').style.display = 'none';
@@ -809,10 +791,12 @@
             progressEl.textContent = `Card ${currentCardIndex + 1} of ${flashcards.length}`;
             progressFill.style.width = `${((currentCardIndex + 1) / flashcards.length) * 100}%`;
         }
+
         function flipCard() {
             const card = document.querySelector('.flashcard');
             card.classList.toggle('is-flipped');
         }
+
         function nextCard() {
             if (currentCardIndex < flashcards.length - 1) {
                 currentCardIndex++;
@@ -821,6 +805,7 @@
                 updateFlashcardDisplay();
             }
         }
+
         function prevCard() {
             if (currentCardIndex > 0) {
                 currentCardIndex--;
@@ -829,7 +814,7 @@
                 updateFlashcardDisplay();
             }
         }
-        // Event listeners for flashcard controls
+
         document.getElementById('flipCard').addEventListener('click', flipCard);
         document.getElementById('nextCard').addEventListener('click', nextCard);
         document.getElementById('prevCard').addEventListener('click', prevCard);
@@ -837,49 +822,43 @@
             document.querySelector('.flashcard-mode').style.display = 'none';
         });
 
-        // Summary‑mode close
         document.querySelector('.close-summary').addEventListener('click', () => {
-        document.querySelector('.summary-mode').style.display = 'none';
+            document.querySelector('.summary-mode').style.display = 'none';
         });
 
-        // Copy‑summary button
         document.querySelector('.copy-summary').addEventListener('click', async () => {
-        try {
-            const text = document.querySelector('.summary-section').innerText;
-            await navigator.clipboard.writeText(text);
-            alert('Summary copied to clipboard!');
-        } catch {
-            alert('Unable to copy.');
-        }
+            try {
+                const text = document.querySelector('.summary-section').innerText;
+                await navigator.clipboard.writeText(text);
+                alert('Summary copied to clipboard!');
+            } catch {
+                alert('Unable to copy.');
+            }
         });
 
-        // Question‑mode close
         document.querySelector('.close-questions').addEventListener('click', () => {
-        document.querySelector('.question-mode').style.display = 'none';
+            document.querySelector('.question-mode').style.display = 'none';
         });
 
-        // Handle question submissions
         document.querySelector('.question-section').addEventListener('click', e => {
-        if (!e.target.classList.contains('submit-answer')) return;
-        const card     = e.target.closest('.question');
-        const choice   = card.querySelector('input[type=radio]:checked');
-        const feedback = card.querySelector('.feedback');
-
-        if (!choice) {
-            feedback.textContent = 'Please select an answer.';
-            feedback.style.color = 'orange';
-            return;
-        }
-        if (choice.value === card.dataset.correct) {
-            feedback.textContent = '✅ Correct!';
-            feedback.style.color = 'green';
-        } else {
-            feedback.textContent = '❌ Incorrect, try again.';
-            feedback.style.color = 'red';
-        }
+            if (!e.target.classList.contains('submit-answer')) return;
+            const card = e.target.closest('.question');
+            const choice = card.querySelector('input[type=radio]:checked');
+            const feedback = card.querySelector('.feedback');
+            if (!choice) {
+                feedback.textContent = 'Please select an answer.';
+                feedback.style.color = 'orange';
+                return;
+            }
+            if (choice.value === card.dataset.correct) {
+                feedback.textContent = '✅ Correct!';
+                feedback.style.color = 'green';
+            } else {
+                feedback.textContent = '❌ Incorrect, try again.';
+                feedback.style.color = 'red';
+            }
         });
 
-        // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if (document.querySelector('.flashcard-mode').style.display === 'block') {
                 if (e.code === 'Space') {
@@ -894,6 +873,7 @@
                 }
             }
         });
+
         document.getElementById('newChatButton').addEventListener('click', () => {
             const chatList = document.getElementById('chatList');
             const newChatLi = document.createElement('li');
@@ -911,6 +891,7 @@
             chatList.insertBefore(newChatLi, chatList.firstChild);
             newChatLi.click();
         });
+
         document.getElementById('logoutButton').addEventListener('click', () => {
             auth.signOut().then(() => {
                 window.location.href = '/';
@@ -919,6 +900,7 @@
                 alert('Logout failed. Please try again.');
             });
         });
+
         function openPopup(type, encodedData) {
             const data = decodeURIComponent(encodedData);
             const overlay = document.createElement('div');
@@ -930,54 +912,12 @@
             const closeBtn = popup.querySelector('.close-btn');
             closeBtn.addEventListener('click', () => closePopup(overlay, popup));
             const content = document.createElement('div');
-            if (type === 'summary') {
-                content.className = 'summary-content';
-                content.innerHTML = `<h3>Summary</h3>`;
-                
-                // Parse the markdown content
-                const parsedContent = marked.parse(data);
-                
-                // Create a temporary div to hold the parsed content
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = parsedContent;
-                
-                // Find all h2 elements and create sections
-                const h2Elements = tempDiv.querySelectorAll('h2');
-                
-                if (h2Elements.length > 0) {
-                    // Process each h2 and its content as a section
-                    h2Elements.forEach((h2, index) => {
-                        let sectionContent = '';
-                        let nextElement = h2.nextElementSibling;
-                        
-                        // Create a section div
-                        const sectionDiv = document.createElement('div');
-                        sectionDiv.className = 'summary-section';
-                        sectionDiv.appendChild(h2.cloneNode(true));
-                        
-                        // Collect all elements until the next h2 or end
-                        while (nextElement && nextElement.tagName !== 'H2') {
-                            sectionDiv.appendChild(nextElement.cloneNode(true));
-                            nextElement = nextElement.nextElementSibling;
-                        }
-                        
-                        content.appendChild(sectionDiv);
-                    });
-                } else {
-                    // If no h2 elements, just add the content as a single section
-                    const sectionDiv = document.createElement('div');
-                    sectionDiv.className = 'summary-section';
-                    sectionDiv.innerHTML = parsedContent;
-                    content.appendChild(sectionDiv);
-                }
-            } 
-            else if (type === 'flashcards') {
+            if (type === 'flashcards') {
                 const flashcards = JSON.parse(data);
                 content.innerHTML = '<h3>Flashcards</h3>';
                 if (flashcards.length === 0) {
                     content.innerHTML += '<p>No flashcards available.</p>';
-                } 
-                else {
+                } else {
                     flashcards.forEach(card => {
                         const div = document.createElement('div');
                         div.className = 'flashcard';
@@ -985,84 +925,12 @@
                         content.appendChild(div);
                     });
                 }
-            } 
-            else if (type === 'questions') {
-    let questions = JSON.parse(data);
-    content.innerHTML = '<h3>Practice Questions</h3>';
-    if (questions.length === 0) {
-        content.innerHTML += '<p>No questions available.</p>';
-    } else {
-        // Fisher-Yates shuffle
-        for (let i = questions.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [questions[i], questions[j]] = [questions[j], questions[i]];
-        }
-        // Take the first 5 questions
-        questions = questions.slice(0, 5);
-        questions.forEach((q, index) => {
-            const div = document.createElement('div');
-            div.className = 'question';
-            div.setAttribute('data-correct', q.correct_answer);
-            div.innerHTML = `
-                <p><strong>Question ${index + 1}:</strong> ${q.question}</p>
-                <div class="options">
-                    <div>
-                        <input type="radio" id="q${index}-a" name="question-${index}" value="a">
-                        <label for="q${index}-a">${q.options.a}</label>
-                    </div>
-                    <div>
-                        <input type="radio" id="q${index}-b" name="question-${index}" value="b">
-                        <label for="q${index}-b">${q.options.b}</label>
-                    </div>
-                    <div>
-                        <input type="radio" id="q${index}-c" name="question-${index}" value="c">
-                        <label for="q${index}-c">${q.options.c}</label>
-                    </div>
-                    <div>
-                        <input type="radio" id="q${index}-d" name="question-${index}" value="d">
-                        <label for="q${index}-d">${q.options.d}</label>
-                    </div>
-                </div>
-                <div class="feedback" style="margin-top: 10px; display: none;"></div>
-                <button type="button" class="check-answer" data-question-index="${index}" style="margin-top: 10px; padding: 5px 10px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">Submit</button>
-            `;
-            content.appendChild(div);
-        });
-
-        // Use event delegation for check-answer buttons
-        document.addEventListener('click', function(event) {
-            if (event.target && event.target.classList.contains('check-answer')) {
-                const button = event.target;
-                const questionIndex = button.getAttribute('data-question-index');
-                const questionDiv = button.closest('.question');
-                const selectedOption = questionDiv.querySelector('input[name="question-' + questionIndex + '"]:checked');
-                const correctAnswer = questionDiv.getAttribute('data-correct');
-                const feedbackDiv = questionDiv.querySelector('.feedback');
-                
-                if (!selectedOption) {
-                    feedbackDiv.textContent = 'Please select an answer.';
-                    feedbackDiv.style.color = 'orange';
-                    feedbackDiv.style.display = 'block';
-                    return;
-                }
-                
-                if (selectedOption.value === correctAnswer) {
-                    feedbackDiv.textContent = 'Correct! Well done!';
-                    feedbackDiv.style.color = 'green';
-                } else {
-                    feedbackDiv.textContent = 'Incorrect. Try again!';
-                    feedbackDiv.style.color = 'red';
-                }
-                feedbackDiv.style.display = 'block';
-                console.log('Answer checked:', selectedOption.value, 'Correct answer:', correctAnswer);
             }
-        });
-    }
-}
             popup.appendChild(content);
             document.body.appendChild(overlay);
             document.body.appendChild(popup);
         }
+
         function closePopup(overlay, popup) {
             document.body.removeChild(overlay);
             document.body.removeChild(popup);
