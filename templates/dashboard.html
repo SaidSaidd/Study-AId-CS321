@@ -401,6 +401,70 @@
         .close-flashcards:hover {
             background: #d1d4dd;
         }
+
+        /* ========= Summary Mode ========= */
+        .summary-mode {
+        display: none;
+        }
+        .summary-section {
+        max-width: 900px;
+        margin: 30px auto;
+        padding: 40px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 0.25rem 1rem rgba(0,0,0,0.15);
+        color: #303545;
+        line-height: 1.6;
+        }
+        .summary-header-btns {
+        display: flex;
+        gap: 8px;
+        }
+        .copy-summary,
+        .close-summary {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        background: #e9ebf0;
+        color: #303545;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background 0.2s;
+        }
+        .copy-summary:hover,
+        .close-summary:hover {
+        background: #d1d4dd;
+        }
+
+        /* ========= Question Mode ========= */
+        .question-mode {
+        display: none;
+        }
+        .question-section {
+        max-width: 900px;
+        margin: 30px auto;
+        padding: 40px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 0.25rem 1rem rgba(0,0,0,0.15);
+        color: #303545;
+        line-height: 1.6;
+        }
+        .close-questions {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        background: #e9ebf0;
+        color: #303545;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background 0.2s;
+        }
+        .close-questions:hover {
+        background: #d1d4dd;
+        }
+
+
     </style>
 </head>
 <body>
@@ -445,6 +509,30 @@
                     <div class="keyboard-shortcuts">
                         Keyboard shortcuts: <span>←</span> Previous <span>Space</span> Flip <span>→</span> Next
                     </div>
+                </div>
+            </div>
+            <!-- Summary Mode -->
+            <div class="flashcard-mode summary-mode">
+                <div class="flashcard-mode-header">
+                <h2>Summary</h2>
+                <div class="summary-header-btns">
+                    <button class="copy-summary">Copy</button>
+                    <button class="close-summary">Exit</button>
+                </div>
+                </div>
+                <div class="summary-section">
+                <!-- rendered Markdown goes here -->
+                </div>
+            </div>
+            
+            <!-- Question Mode -->
+            <div class="flashcard-mode question-mode">
+                <div class="flashcard-mode-header">
+                <h2>Practice Questions</h2>
+                <button class="close-questions">Exit</button>
+                </div>
+                <div class="question-section">
+                <!-- generated questions go here -->
                 </div>
             </div>
         </div>
@@ -571,7 +659,12 @@
                 <button class="questions-btn" data-content="${encodedQuestions}">Questions</button>
             `;
             // Add event listeners for buttons
-            buttonsDiv.querySelector('.summary-btn').addEventListener('click', () => openPopup('summary', encodedSummary));
+            buttonsDiv.querySelector('.summary-btn').addEventListener('click', () => {
+                const rawMd = decodeURIComponent(encodedSummary);
+                const html  = marked.parse(rawMd);
+                document.querySelector('.summary-section').innerHTML = html;
+                document.querySelector('.summary-mode').style.display = 'block';
+            });
             buttonsDiv.querySelector('.flashcards-btn').addEventListener('click', () => {
                 const flashcardsData = JSON.parse(decodeURIComponent(encodedFlashcards));
                 if (flashcardsData && flashcardsData.length > 0) {
@@ -580,7 +673,27 @@
                     alert('No flashcards available for this content.');
                 }
             });
-            buttonsDiv.querySelector('.questions-btn').addEventListener('click', () => openPopup('questions', encodedQuestions));
+            buttonsDiv.querySelector('.questions-btn').addEventListener('click', () => {
+                const qs = JSON.parse(decodeURIComponent(encodedQuestions));
+                const section = document.querySelector('.question-section');
+
+                section.innerHTML = qs.map((q,i) => `
+                    <div class="question" data-correct="${q.correct_answer}">
+                    <p><strong>Q${i+1}:</strong> ${q.question}</p>
+                    <div class="options">
+                        ${['a','b','c','d'].map(opt => `
+                        <label style="display:block; margin:4px 0;">
+                            <input type="radio" name="q${i}" value="${opt}">
+                            ${q.options[opt]}
+                        </label>`).join('')}
+                    </div>
+                    <button class="submit-answer flashcard-btn" style="margin-top:8px;">Submit</button>
+                    <div class="feedback" style="margin-top:8px; font-weight:600;"></div>
+                    </div>
+                `).join('');
+
+                document.querySelector('.question-mode').style.display = 'block';
+            });
             container.appendChild(buttonsDiv);
             return container;
         }
@@ -723,6 +836,49 @@
         document.querySelector('.close-flashcards').addEventListener('click', () => {
             document.querySelector('.flashcard-mode').style.display = 'none';
         });
+
+        // Summary‑mode close
+        document.querySelector('.close-summary').addEventListener('click', () => {
+        document.querySelector('.summary-mode').style.display = 'none';
+        });
+
+        // Copy‑summary button
+        document.querySelector('.copy-summary').addEventListener('click', async () => {
+        try {
+            const text = document.querySelector('.summary-section').innerText;
+            await navigator.clipboard.writeText(text);
+            alert('Summary copied to clipboard!');
+        } catch {
+            alert('Unable to copy.');
+        }
+        });
+
+        // Question‑mode close
+        document.querySelector('.close-questions').addEventListener('click', () => {
+        document.querySelector('.question-mode').style.display = 'none';
+        });
+
+        // Handle question submissions
+        document.querySelector('.question-section').addEventListener('click', e => {
+        if (!e.target.classList.contains('submit-answer')) return;
+        const card     = e.target.closest('.question');
+        const choice   = card.querySelector('input[type=radio]:checked');
+        const feedback = card.querySelector('.feedback');
+
+        if (!choice) {
+            feedback.textContent = 'Please select an answer.';
+            feedback.style.color = 'orange';
+            return;
+        }
+        if (choice.value === card.dataset.correct) {
+            feedback.textContent = '✅ Correct!';
+            feedback.style.color = 'green';
+        } else {
+            feedback.textContent = '❌ Incorrect, try again.';
+            feedback.style.color = 'red';
+        }
+        });
+
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if (document.querySelector('.flashcard-mode').style.display === 'block') {
