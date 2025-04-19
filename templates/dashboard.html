@@ -461,6 +461,50 @@
         .close-questions:hover {
             background: #d1d4dd;
         }
+        .progress-steps {
+            font-family: Arial, sans-serif;
+            margin: 15px 0;
+        }
+
+        .progress-step {
+            margin: 8px 0;
+            padding: 8px 12px;
+            border-radius: 4px;
+            background-color: #f5f5f5;
+            transition: all 0.3s ease;
+        }
+
+        .step-name {
+            font-weight: bold;
+        }
+
+        .status {
+            font-weight: 500;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .pending { color: #666; background-color: #e9ecef; }
+        .processing { color: #856404; background-color: #fff3cd; }
+        .complete { color: #155724; background-color: #d4edda; }
+        .error { color: #721c24; background-color: #f8d7da; }
+
+        #finalStatus {
+            margin-top: 15px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        #finalStatus.complete {
+            color: #155724;
+            background-color: #d4edda;
+        }
+
+        #finalStatus.error {
+            color: #721c24;
+            background-color: #f8d7da;
+        }
     </style>
 </head>
 <body>
@@ -720,47 +764,136 @@
                 alert('Only PDF and TXT files are allowed.');
                 return;
             }
+            
+            // Set up UI
             document.getElementById('chatTitle').innerHTML = 'Processing<span id="loadingDots"></span>';
             const loadingInterval = animateDots();
+            
+            // Create progress container
+            const progressContainer = document.createElement('div');
+            progressContainer.id = 'progressContainer';
+            progressContainer.style.marginTop = '10px';
+            progressContainer.innerHTML = `
+                <div class="progress-steps">
+                    <div id="overviewStep" class="progress-step">
+                        <span class="step-name">Overview</span>: <span class="status pending">Pending</span>
+                    </div>
+                    <div id="summaryStep" class="progress-step">
+                        <span class="step-name">Summary</span>: <span class="status pending">Pending</span>
+                    </div>
+                    <div id="flashcardsStep" class="progress-step">
+                        <span class="step-name">Flashcards</span>: <span class="status pending">Pending</span>
+                    </div>
+                    <div id="questionsStep" class="progress-step">
+                        <span class="step-name">Questions</span>: <span class="status pending">Pending</span>
+                    </div>
+                </div>
+                <div id="finalStatus"></div>
+            `;
+            document.getElementById('chatContent').appendChild(progressContainer);
+
             auth.currentUser.getIdToken(true).then(token => {
                 const formData = new FormData();
                 formData.append('file', file);
+
                 fetch('/upload', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`
                     },
                     body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    clearInterval(loadingInterval);
-                    if (data.chatId) {
-                        loadChatContent(data.chatId);
-                        updateChatTitle(data.chatId, file.name);
-                    } else {
-                        alert('Upload failed: ' + (data.error || 'Unknown error'));
-                        document.getElementById('chatTitle').textContent = 'Upload failed.';
+                }).then(async (response) => {
+                    if (!response.ok) {
+                        throw new Error(`Upload failed with status ${response.status}`);
+                    }
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '';
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+
+                        buffer += decoder.decode(value, { stream: true });
+                        const chunks = buffer.split('\n\n');
+
+                        // Process complete chunks (leave last incomplete one in buffer)
+                        buffer = chunks.pop() || '';
+                        
+                        for (const chunk of chunks) {
+                            if (!chunk.trim()) continue;
+                            
+                            try {
+                                const data = JSON.parse(chunk);
+                                console.log('Progress update:', data);
+
+                                if (data.error) {
+                                    throw new Error(data.error);
+                                }
+
+                                if (data.step) {
+                                    updateStep(`${data.step}Step`, data.status);
+                                } else if (data.status === 'complete') {
+                                    clearInterval(loadingInterval);
+                                    document.getElementById('finalStatus').textContent = 'Processing complete!';
+                                    document.getElementById('finalStatus').className = 'complete';
+                                    loadChatContent(data.chatId);
+                                    updateChatTitle(data.chatId, file.name);
+                                    return; // Exit after completion
+                                }
+                            } catch (e) {
+                                console.error('Error processing chunk:', e);
+                                throw e; // Will be caught by outer catch
+                            }
+                        }
                     }
                 }).catch(error => {
                     clearInterval(loadingInterval);
                     console.error('Upload error:', error);
-                    alert('Upload failed. Please try again.');
-                    document.getElementById('chatTitle').textContent = 'Upload failed.';
+                    markAllStepsAsError();
+                    document.getElementById('finalStatus').textContent = `Error: ${error.message}`;
+                    document.getElementById('finalStatus').className = 'error';
                 });
             });
-        }
 
-        function animateDots() {
-            const dots = document.getElementById('loadingDots');
-            let count = 0;
-            const maxDots = 3;
-            return setInterval(() => {
-                count = (count + 1) % (maxDots + 1);
-                dots.textContent = '.'.repeat(count);
-            }, 500);
-        }
+            // Helper functions
+            function updateStep(stepId, status) {
+                const stepElement = document.getElementById(stepId);
+                const statusElement = stepElement.querySelector('.status');
+                
+                // Update status text and class
+                statusElement.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+                statusElement.className = 'status ' + status;
+                
+                // Update step element class for visual feedback
+                stepElement.classList.remove('pending', 'processing', 'complete', 'error');
+                stepElement.classList.add(status);
+            }
 
+            function markAllStepsAsError() {
+                const steps = document.querySelectorAll('.progress-step');
+                steps.forEach(step => {
+                    step.classList.remove('pending', 'processing', 'complete');
+                    step.classList.add('error');
+                    const statusElement = step.querySelector('.status');
+                    if (statusElement) {
+                        statusElement.textContent = 'Failed';
+                        statusElement.className = 'status error';
+                    }
+                });
+            }
+
+            function animateDots() {
+                const dots = document.getElementById('loadingDots');
+                let count = 0;
+                const maxDots = 3;
+                return setInterval(() => {
+                    count = (count + 1) % (maxDots + 1);
+                    dots.textContent = '.'.repeat(count);
+                }, 500);
+            }
+        }
         function updateChatTitle(chatId, filename) {
             const chatLi = document.querySelector(`.sidebar li[data-chat-id="${chatId}"]`);
             if (chatLi) chatLi.textContent = filename;
