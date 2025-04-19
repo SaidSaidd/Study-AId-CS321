@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response
 import os
 import firebase_admin
 from firebase_admin import credentials, firestore, auth  # Explicitly import auth
@@ -9,6 +9,7 @@ from src.AIQuestions import AIQuestions
 import datetime
 import jwt
 import time
+import json
 
 app = Flask(__name__)
 
@@ -88,47 +89,68 @@ def upload_file():
     file.save(file_path)
     print('File saved:', file_path, flush=True)
 
-    try:
-        ai_features = AIFeatures("AIzaSyCFP_xnzpKf8FBn7Nl1cqOU682IicQykLg", file_path)
-        overview = ai_features.generate_content()
-        ai_summary = AISummary(ai_features)
-        summary_content = ai_summary.generate_content()
-        summary = ai_summary.format_for_display(summary_content)
+    def generate():
+        # Initialize variables that need cleanup
+        ai_features = None
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        
+        try:
+            # Overview
+            yield json.dumps({"step": "overview", "status": "processing"}) + "\n\n"
+            ai_features = AIFeatures("AIzaSyCFP_xnzpKf8FBn7Nl1cqOU682IicQykLg", file_path)
+            overview = ai_features.generate_content()
+            yield json.dumps({"step": "overview", "status": "complete"}) + "\n\n"
+            
+            # Summary
+            yield json.dumps({"step": "summary", "status": "processing"}) + "\n\n"
+            ai_summary = AISummary(ai_features)
+            summary_content = ai_summary.generate_content()
+            summary = ai_summary.format_for_display(summary_content)
+            yield json.dumps({"step": "summary", "status": "complete"}) + "\n\n"
+            
+            # Flashcards
+            yield json.dumps({"step": "flashcards", "status": "processing"}) + "\n\n"
+            ai_flashcards = AIFlashcards(ai_features)
+            flashcards_content = ai_flashcards.generate_content()
+            flashcards_dict = ai_flashcards.create_dict(flashcards_content)
+            flashcards = [{"word": ai_flashcards.get_word(v), "definition": ai_flashcards.get_def(v)} for v in flashcards_dict.values()]
+            yield json.dumps({"step": "flashcards", "status": "complete"}) + "\n\n"
+            
+            # Questions
+            yield json.dumps({"step": "questions", "status": "processing"}) + "\n\n"
+            num_questions = 100
+            ai_questions = AIQuestions(ai_features, num_questions)
+            questions_content = ai_questions.generate_content()
+            questions = ai_questions.parse_output(questions_content)
+            yield json.dumps({"step": "questions", "status": "complete"}) + "\n\n"
 
-        ai_flashcards = AIFlashcards(ai_features)
-        flashcards_content = ai_flashcards.generate_content()
-        flashcards_dict = ai_flashcards.create_dict(flashcards_content)
-        flashcards = [{"word": ai_flashcards.get_word(v), "definition": ai_flashcards.get_def(v)} for v in flashcards_dict.values()]
+            # Final result
+            chat_data = {
+                "userId": user_id,
+                "filename": file.filename,
+                "timestamp": datetime.datetime.utcnow().isoformat(),
+                "overview": overview,
+                "summary": summary,
+                "flashcards": flashcards,
+                "questions": questions
+            }
+            doc_ref = db.collection('chats').add(chat_data)[1]
+            
+            yield json.dumps({
+                "status": "complete",
+                "chatId": doc_ref.id
+            }) + "\n\n"
 
-        num_questions = 100
-        ai_questions = AIQuestions(ai_features, num_questions)
-        questions_content = ai_questions.generate_content()
-        print(questions_content, flush=True)
-        questions = ai_questions.parse_output(questions_content)
-        print(questions, flush=True)
+        except Exception as e:
+            yield json.dumps({"error": str(e)}) + "\n\n"
+        finally:
+            # Safe cleanup - check if variables exist first
+            if 'file_path' in locals() and os.path.exists(file_path):
+                os.remove(file_path)
+            if ai_features is not None:  # Explicit None check
+                ai_features.delete_all_files()
 
-        ai_features.delete_all_files()
+    return Response(generate(), mimetype="application/json")
 
-        chat_data = {
-            "userId": user_id,
-            "filename": file.filename,
-            "timestamp": datetime.datetime.utcnow().isoformat(),
-            "overview": overview,
-            "summary": summary,
-            "flashcards": flashcards,
-            "questions": questions
-        }
-        doc_ref = db.collection('chats').add(chat_data)[1]
-        chat_id = doc_ref.id
-
-        os.remove(file_path)
-
-        return jsonify({"chatId": chat_id}), 200
-
-    except Exception as e:
-        if os.path.exists(file_path):
-            os.remove(file_path)
-        return jsonify({"error": str(e)}), 500
-    
 if __name__ == '__main__':
     app.run(debug=True)
