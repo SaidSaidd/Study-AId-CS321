@@ -707,28 +707,51 @@
                     alert('No flashcards available for this content.');
                 }
             });
+
             buttonsDiv.querySelector('.questions-btn').addEventListener('click', () => {
-                const qs = JSON.parse(decodeURIComponent(encodedQuestions));
-                const section = document.querySelector('.question-section');
-                section.innerHTML = qs.map((q, i) => `
-                    <div class="question" data-correct="${q.correct_answer}">
-                    <p><strong>Q${i+1}:</strong> ${q.question}</p>
-                    <div class="options">
-                        ${['a','b','c','d'].map(opt => `
-                        <label style="display:block; margin:4px 0;">
-                            <input type="radio" name="q${i}" value="${opt}">
-                            ${q.options[opt]}
-                        </label>`).join('')}
-                    </div>
-                    <button class="submit-answer flashcard-btn" style="margin-top:8px;">Submit</button>
-                    <div class="feedback" style="margin-top:8px; font-weight:600;"></div>
-                    </div>
-                `).join('');
-                document.querySelector('.question-mode').style.display = 'block';
+            generateQuiz(encodedQuestions);
             });
+
             container.appendChild(buttonsDiv);
             return container;
         }
+
+        function generateQuiz(encodedQuestions) {
+                let allQuestions = JSON.parse(decodeURIComponent(encodedQuestions));
+
+                for (let i = allQuestions.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [allQuestions[i], allQuestions[j]] = [allQuestions[j], allQuestions[i]];
+                }
+
+                const qs = allQuestions.slice(0, 10); 
+                const section = document.querySelector('.question-section');
+
+                section.innerHTML = `
+                <div class="score-box" style="display:none; background:#f0f0f0; color:black; padding:10px; border:1px solid #ccc; margin-bottom:16px; font-weight:bold;">
+                Score: <span class="score-text"></span>
+                 </div>
+                 ${qs.map((q, i) => `
+                <div class="question" data-correct="${q.correct_answer}">
+                <p><strong>Q${i + 1}:</strong> ${q.question}</p>
+                <div class="options">
+                    ${['a','b','c','d'].map(opt => `
+                        <label style="display:block; margin:4px 0;">
+                            <input type="radio" name="q${i}" value="${opt}">
+                            ${q.options[opt]}
+                        </label>
+                    `).join('')}
+                </div>
+                <div class="feedback" style="margin-top:8px; font-weight:600;"></div>
+                </div>
+                `).join('')}
+                <button class="submit-all" style="margin-top:20px; padding:10px 16px; background-color:#007bff; color:white; border:none; border-radius:4px; cursor:pointer;">
+                Submit Answers
+                </button>
+            `;
+   
+            document.querySelector('.question-mode').style.display = 'block';
+            };
 
         function createUploadArea(chatId) {
             const uploadDiv = document.createElement('div');
@@ -974,23 +997,46 @@
         });
 
         document.querySelector('.question-section').addEventListener('click', e => {
-            if (!e.target.classList.contains('submit-answer')) return;
-            const card = e.target.closest('.question');
-            const choice = card.querySelector('input[type=radio]:checked');
-            const feedback = card.querySelector('.feedback');
-            if (!choice) {
-                feedback.textContent = 'Please select an answer.';
-                feedback.style.color = 'orange';
-                return;
-            }
-            if (choice.value === card.dataset.correct) {
-                feedback.textContent = '✅ Correct!';
-                feedback.style.color = 'green';
-            } else {
-                feedback.textContent = '❌ Incorrect, try again.';
-                feedback.style.color = 'red';
-            }
-        });
+            if (!e.target.classList.contains('submit-all')) return;
+            const allQuestions = document.querySelectorAll('.question');
+            let score = 0;
+
+            allQuestions.forEach(card => {
+                const correct = card.dataset.correct;
+                const selected = card.querySelector('input[type=radio]:checked');
+                 const feedback = card.querySelector('.feedback');
+
+        if (!selected) {
+            feedback.textContent = '⚠️ Please select an answer.';
+            feedback.style.color = 'orange';
+            return;
+        }
+
+        if (selected.value === correct) {
+            feedback.textContent = '✅ Correct!';
+            feedback.style.color = 'green';
+            score++;
+        } 
+        else {
+            const correctText = card.querySelector(`input[value="${correct}"]`).parentElement.textContent.trim();
+            feedback.innerHTML = `❌ Incorrect. Correct answer: <span style="color:green;">${correctText}</span>`;
+            feedback.style.color = 'red';
+        }
+
+        
+        const inputs = card.querySelectorAll('input[type=radio]');
+        inputs.forEach(input => input.disabled = true);
+    });
+
+
+    const scoreBox = document.querySelector('.score-box');
+    const scoreText = document.querySelector('.score-text');
+    scoreText.textContent = `${score} / ${allQuestions.length}`;
+    scoreBox.style.display = 'block';
+    e.target.disabled = true;
+
+    e.target.remove();
+});
 
         document.addEventListener('keydown', (e) => {
             if (document.querySelector('.flashcard-mode').style.display === 'block') {
