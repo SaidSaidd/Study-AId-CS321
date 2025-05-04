@@ -10,6 +10,7 @@ import datetime
 import jwt
 import time
 import json
+from werkzeug.exceptions import BadRequest
 
 app = Flask(__name__)
 
@@ -151,6 +152,142 @@ def upload_file():
                 ai_features.delete_all_files()
 
     return Response(generate(), mimetype="application/json")
+@app.route('/save_quiz_score', methods=['POST'])
+def save_quiz_score():
+    try:
+        # Verify authentication
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"error": "Unauthorized"}), 401
+
+        try:
+            token = auth_header.split("Bearer ")[1]
+            decoded_token = auth.verify_id_token(token)
+            user_id = decoded_token['uid']
+        except Exception as e:
+            return jsonify({"error": f"Authentication error: {str(e)}"}), 401
+
+        # Get data from request
+        data = request.get_json()
+        if not data:
+            raise BadRequest("Missing JSON data")
+
+        required_fields = ['chatId', 'score', 'totalQuestions', 'quizDate']
+        for field in required_fields:
+            if field not in data:
+                raise BadRequest(f"Missing required field: {field}")
+
+        # Add score to database
+        score_data = {
+            "userId": user_id,
+            "chatId": data['chatId'],
+            "score": data['score'],
+            "totalQuestions": data['totalQuestions'],
+            "percentage": (data['score'] / data['totalQuestions']) * 100 if data['totalQuestions'] > 0 else 0,
+            "timestamp": datetime.datetime.utcnow().isoformat(),
+            "quizDate": data['quizDate']
+        }
+        
+        # Store questions and answers if available
+        if 'questions' in data and 'answers' in data:
+            score_data["questions"] = data['questions']
+            score_data["answers"] = data['answers']
+
+        # Save to Firestore
+        score_ref = db.collection('quiz_scores').add(score_data)[1]
+
+        # Update the chat document with the latest score
+        chat_ref = db.collection('chats').document(data['chatId'])
+        chat = chat_ref.get()
+        
+        if chat.exists:
+            # Get existing scores or create empty list
+            chat_data = chat.to_dict()
+            scores = chat_data.get('quiz_scores', [])
+            
+            # Add this score
+            score_entry = {
+                "score": data['score'],
+                "totalQuestions": data['totalQuestions'],
+                "percentage": (data['score'] / data['totalQuestions']) * 100 if data['totalQuestions'] > 0 else 0,
+                "timestamp": datetime.datetime.utcnow().isoformat(),
+                "scoreId": score_ref.id
+            }
+            
+            # Include questions and answers if available
+            if 'questions' in data and 'answers' in data:
+                score_entry["questions"] = data['questions']
+                score_entry["answers"] = data['answers']
+                
+            scores.append(score_entry)
+            
+            # Update the chat document
+            chat_ref.update({"quiz_scores": scores})
+
+        return jsonify({
+            "success": True,
+            "scoreId": score_ref.id
+        })
+    
+    except BadRequest as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": f"Error saving score: {str(e)}"}), 500
+
+
+@app.route('/get_quiz_scores/<chat_id>', methods=['GET'])
+def get_quiz_scores(chat_id):
+    try:
+        # Verify authentication
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"error": "Unauthorized"}), 401
+
+        try:
+            token = auth_header.split("Bearer ")[1]
+            decoded_token = auth.verify_id_token(token)
+            user_id = decoded_token['uid']
+        except Exception as e:
+            return jsonify({"error": f"Authentication error: {str(e)}"}), 401
+            
+        # Get chat document to verify ownership
+        chat_ref = db.collection('chats').document(chat_id)
+        chat = chat_ref.get()
+        
+        if not chat.exists:
+            return jsonify({"error": "Chat not found"}), 404
+            
+        chat_data = chat.to_dict()
+        if chat_data.get('userId') != user_id:
+            return jsonify({"error": "Unauthorized access to chat"}), 403
+            
+        # Get scores from the chat document
+        scores = chat_data.get('quiz_scores', [])
+        
+        # Sort by timestamp (newest first)
+        scores.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        
+        # Make sure all necessary fields are present in each score
+        for score in scores:
+            # Ensure required fields have defaults if missing
+            if 'score' not in score: score['score'] = 0
+            if 'totalQuestions' not in score: score['totalQuestions'] = 0
+            if 'percentage' not in score: score['percentage'] = 0
+            if 'timestamp' not in score: score['timestamp'] = ''
+            
+            # Add empty arrays for questions and answers if missing
+            # This handles backward compatibility for older quiz entries
+            if 'questions' not in score: score['questions'] = '[]'
+            if 'answers' not in score: score['answers'] = '[]'
+        
+        return jsonify({
+            "success": True,
+            "scores": scores
+        })
+        
+    except Exception as e:
+        return jsonify({"error": f"Error retrieving scores: {str(e)}"}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
