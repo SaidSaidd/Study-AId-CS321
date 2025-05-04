@@ -27,7 +27,6 @@ class AISummary(AIFeatures):
         if not content or not content.strip():
             print("Warning: Generated summary content is empty")
             return "No summary content was generated"
-        print(f"Generated summary content length: {len(content)}")
         return content
     
     def parse_sections(self, generated_content):

@@ -30,7 +30,6 @@ class AIFlashcards(AIFeatures):
         if not content or not content.strip():
             print("Warning: Generated content is empty")
             return "No content was generated"
-        print(f"Generated flashcard content:\n{content}")  # Debug output
         return content
 
     def create_dict(self, generated_content):

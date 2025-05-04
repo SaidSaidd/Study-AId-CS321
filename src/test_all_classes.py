@@ -12,35 +12,50 @@ sys_modules_patcher = patch.dict('sys.modules', {
 sys_modules_patcher.start()
 
 # Now import our classes after mocking their dependencies
-from AIFeatures import AIFeatures
-from AIFlashcards import AIFlashcards
-from AISummary import AISummary
-from AIQuestions import AIQuestions
+from .AIFeatures import AIFeatures
+from .AIFlashcards import AIFlashcards
+from .AISummary import AISummary
+from .AIQuestions import AIQuestions
 
 # Use a dummy API key for testing
 API_KEY = 'dummy_api_key'
 
 # Create a temporary test file
 @pytest.fixture
-def test_pdf_file():
-    with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
-        f.write(b'Test PDF content')
-        temp_path = f.name
+def test_pdf_file(request):
+    # Default to creating the file unless specified otherwise
+    create_file = getattr(request, 'param', True)
+    temp_path = None
+    if create_file:
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
+            f.write(b'Test PDF content')
+            temp_path = f.name
+    else:
+        temp_path = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False).name
+        os.unlink(temp_path)
+
     yield temp_path
     # Clean up after test
     if os.path.exists(temp_path):
         os.unlink(temp_path)
         
 @pytest.fixture
-def test_txt_file():
-    with tempfile.NamedTemporaryFile(suffix='.txt', delete=False) as f:
-        f.write(b'Test TXT content')
-        temp_path = f.name
+def test_txt_file(request):
+    # Default to creating the file unless specified otherwise
+    create_file = getattr(request, 'param', True)
+    temp_path = None
+    if create_file:
+        with tempfile.NamedTemporaryFile(suffix='.txt', delete=False) as f:
+            f.write(b'Test TXT content')
+            temp_path = f.name
+    else:
+        # Create a nonexistent path for the False branch
+        temp_path = tempfile.NamedTemporaryFile(suffix='.txt', delete=False).name
+        os.unlink(temp_path)  # Delete it immediately to ensure it doesn’t exist
     yield temp_path
     # Clean up after test
     if os.path.exists(temp_path):
         os.unlink(temp_path)
-
 # Mock the AIFeatures class to avoid actual API calls
 @pytest.fixture
 def mock_client():
@@ -70,6 +85,11 @@ def ai_features(test_pdf_file, mock_client):
         yield ai_features
 
 ###Test cases for AIFeatures.py
+def test_create_AIFeatures_instance():
+    # Test the constructor of AIFeatures
+    ai_test = AIFeatures("AIzaSyCFP_xnzpKf8FBn7Nl1cqOU682IicQykLg", "file.pdf")
+    assert ai_test.api_key == "AIzaSyCFP_xnzpKf8FBn7Nl1cqOU682IicQykLg"
+
 def test_set_file_invalid_py(mock_client):
     # Test directly with the set_file method
     with patch.object(AIFeatures, '__init__', return_value=None):
@@ -244,6 +264,20 @@ def test_parse_output_text(ai_features):
         assert parsed_questions[0]["correct_answer"] == "b"
 
 ####Test cases for AIFlashcards
+def test_generate_content_valid_flashcards():
+    # Create a dummy instance with required attributes
+    class Dummy:
+        file_path = "dummy.pdf"
+        client = MagicMock() 
+        uploaded_file = MagicMock()
+
+    ai_summary = AIFlashcards(Dummy())
+    
+    # Patch the generate_content method in AIFeatures to return an empty string
+    with patch.object(AIFeatures, "generate_content", MagicMock(return_value="Flashcards generated.")):
+        result = ai_summary.generate_content()
+        assert result == "Flashcards generated."
+
 def test_create_dict(ai_features):
     with patch.object(AIFlashcards, '__init__', return_value=None):
         ai_flashcards = AIFlashcards(None)
@@ -340,6 +374,20 @@ def test_get_def_with_spaces(ai_features):
     assert definition == "Class providing method to generate content using Gemini."
 
 #Test cases for AISummary
+def test_generate_content_valid_summary():
+    # Create a dummy instance with required attributes
+    class Dummy:
+        file_path = "dummy.pdf"
+        client = MagicMock()  # dummy client
+        uploaded_file = MagicMock()
+
+    ai_summary = AISummary(Dummy())
+    
+    # Patch the generate_content method in AIFeatures to return an empty string
+    with patch.object(AIFeatures, "generate_content", MagicMock(return_value="Content generated.")):
+        result = ai_summary.generate_content()
+        assert result == "Content generated."
+
 def test_create_AISummary_instance(ai_features):
     ai_summary = AISummary(ai_features)
 
@@ -361,6 +409,16 @@ def test_AISummary_parse_sections(ai_features):
     assert sections["1"]["content"] == "This is an introduction."
     assert sections["2"]["title"] == "Main Content"
     assert sections["3"]["title"] == "Conclusion"
+
+def test_AISummary_parse_sections_no_sections(ai_features):
+    ai_summary = AISummary(ai_features)
+    test_content = "This is a single section without headers."
+    
+    sections = ai_summary.parse_sections(test_content)
+    
+    assert len(sections) == 1
+    assert sections["1"]["title"] == "Summary"
+    assert sections["1"]["content"] == test_content.strip()
 
 def test_AISummary_format_for_display(ai_features):
     ai_summary = AISummary(ai_features)
@@ -386,3 +444,21 @@ def test_aisummary_empty_content(ai_features):
         with patch.object(AIFeatures, 'generate_content', return_value=""):
             result = ai_summary.generate_content()
             assert result == "No summary content was generated"
+
+# Test for test_pdf_file fixture
+@pytest.mark.parametrize("test_pdf_file", [True], indirect=True)
+def test_pdf_file_exists(test_pdf_file):
+    assert os.path.exists(test_pdf_file)
+
+@pytest.mark.parametrize("test_pdf_file", [False], indirect=True)
+def test_pdf_file_not_exists(test_pdf_file):
+    assert not os.path.exists(test_pdf_file)
+
+# Test for test_txt_file fixture
+@pytest.mark.parametrize("test_txt_file", [True], indirect=True)
+def test_txt_file_exists(test_txt_file):
+    assert os.path.exists(test_txt_file) 
+
+@pytest.mark.parametrize("test_txt_file", [False], indirect=True)
+def test_txt_file_not_exists(test_txt_file):
+    assert not os.path.exists(test_txt_file)
