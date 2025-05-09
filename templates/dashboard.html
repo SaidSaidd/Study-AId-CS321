@@ -58,9 +58,13 @@
             font-weight: 600;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
-
-        /* Styles for quiz history items (these styles are still useful for the history within the questions section) */
-        .sidebar-quiz-item { /* Renaming or repurposing this class might be good later, but keeping for now */
+        
+        .sidebar-quiz-history {
+            margin-top: 10px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .sidebar-quiz-item {
             padding: 12px 15px;
             margin-bottom: 5px;
             background: rgba(255, 255, 255, 0.1);
@@ -69,30 +73,30 @@
             cursor: pointer;
             will-change: transform, background-color, box-shadow;
         }
-
+        
         .sidebar-quiz-item:hover {
             background: #2a4c7d;
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
-
+        
         .quiz-title {
             font-weight: 600;
             font-size: 14px;
             margin-bottom: 5px;
         }
-
+        
         .quiz-score {
             font-size: 13px;
         }
-
+        
         .quiz-date {
             font-size: 12px;
             color: rgba(255, 255, 255, 0.7);
             margin-top: 4px;
         }
-
-        .no-quiz-history { /* Renaming or repurposing this class might be good later, but keeping for now */
+        
+        .no-quiz-history {
             color: rgba(255, 255, 255, 0.7);
             font-style: italic;
             padding: 10px 5px;
@@ -292,7 +296,7 @@
             animation: fadeIn 0.2s ease-out;
             will-change: opacity, transform;
         }
-
+        
         @keyframes fadeIn {
             from { opacity: 0; transform: translate(-50%, -48%); }
             to { opacity: 1; transform: translate(-50%, -50%); }
@@ -309,7 +313,7 @@
             animation: fadeInBg 0.2s ease-out;
             will-change: opacity;
         }
-
+        
         @keyframes fadeInBg {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -533,6 +537,16 @@
             font-size: 0.85em;
             letter-spacing: 0.3px;
         }
+        .keyboard-shortcuts span {
+            display: inline-block;
+            padding: 3px 10px;
+            background: rgba(29, 57, 100, 0.08);
+            border-radius: 6px;
+            margin: 0 6px;
+            color: #445780;
+            font-weight: 600;
+            box-shadow: 0 1px 3px rgba(29, 57, 100, 0.1);
+        }
         /* Flashcard mode overlay */
         .flashcard-mode {
             position: fixed;
@@ -547,7 +561,7 @@
             animation: simpleFadeIn 0.2s ease-out;
             will-change: opacity;
         }
-
+        
         @keyframes simpleFadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -603,7 +617,7 @@
         }
         .summary-section:hover {
             transform: translateY(-5px);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 20px 60px rgba(29, 57, 100, 0.15);
         }
         .summary-section h2, .summary-section h3 {
             color: #1d3964;
@@ -655,7 +669,7 @@
         }
         .question-section:hover {
             transform: translateY(-5px);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 20px 60px rgba(29, 57, 100, 0.15);
         }
         .question-section h2, .question-section h3 {
             color: #1d3964;
@@ -725,70 +739,6 @@
             color: #721c24;
             background-color: #f8d7da;
         }
-
-        /* Style for the Quiz History section within Question Mode */
-        .quiz-history {
-            margin-top: 20px;
-            background: #f5f5f5;
-            padding: 15px;
-            border-radius: 5px;
-            display: none; /* Hidden by default */
-        }
-
-        .quiz-history h3 {
-             margin-top: 0;
-             margin-bottom: 10px; /* Adjusted for better spacing */
-        }
-
-        .quiz-history table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-
-        .quiz-history th, .quiz-history td {
-            padding: 8px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-
-        .quiz-history th {
-             border-bottom: 1px solid #ddd;
-        }
-
-        .quiz-history .download-history-btn {
-            background: #34a853;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 4px 8px;
-            cursor: pointer;
-            font-size: 0.9em;
-        }
-
-         /* Style for the Quiz History toggle button */
-        .toggle-quiz-history-btn {
-            margin-bottom: 20px; /* Add space below the button */
-            padding: 10px 15px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            background: #4a6291; /* A slightly different color to distinguish */
-            color: white;
-            font-weight: 600;
-            transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
-            box-shadow: 0 2px 8px rgba(29, 57, 100, 0.2);
-             /* Ensure it stays on the left within its container */
-            display: inline-block; /* Ensure it's a block/inline-block for margin to work */
-            text-align: left; /* Ensure text is left-aligned within the button */
-        }
-
-        .toggle-quiz-history-btn:hover {
-            background: #5a71a3;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 10px rgba(29, 57, 100, 0.3);
-        }
-
     </style>
 </head>
 <body>
@@ -796,7 +746,12 @@
         <div class="sidebar">
             <h2>Chats</h2>
             <ul id="chatList"></ul>
+            
+            <h2 style="margin-top: 30px;">Quiz History</h2>
+            <div id="sidebarQuizHistory" class="sidebar-quiz-history">
+                <p class="no-quiz-history">No quiz history available.</p>
             </div>
+        </div>
         <div class="main">
             <div class="header">
                 <button id="newChatButton">Upload New File</button>
@@ -806,6 +761,7 @@
                 <h2 id="chatTitle">Select a chat or upload a new file</h2>
                 <div id="chatContent"></div>
             </div>
+            <!-- Flashcard Mode -->
             <div class="flashcard-mode">
                 <div class="flashcard-mode-header">
                     <h2>Flashcards</h2>
@@ -833,6 +789,7 @@
                     </div>
                 </div>
             </div>
+            <!-- Summary Mode -->
             <div class="flashcard-mode summary-mode">
                 <div class="flashcard-mode-header">
                     <h2>Summary</h2>
@@ -842,28 +799,18 @@
                     </div>
                 </div>
                 <div class="summary-section">
-                    </div>
+                    <!-- rendered Markdown goes here -->
+                </div>
             </div>
+            <!-- Question Mode -->
             <div class="flashcard-mode question-mode">
                 <div class="flashcard-mode-header">
                     <h2>Practice Questions</h2>
                     <button class="close-questions">Exit</button>
                 </div>
                 <div class="question-section">
-                    <button class="toggle-quiz-history-btn" id="toggleQuizHistory">Show Quiz History</button>
-
-                    <div class="quiz-history" id="quizHistoryContent">
-                        <h3>Quiz History</h3>
-                        <div class="quiz-history-content">
-                            <p>Loading score history...</p>
-                        </div>
-                    </div>
-
-                    <div class="score-box" style="display:none; background:#f0f0f0; color:black; padding:10px; border:1px solid #ccc; margin-bottom:16px; font-weight:bold;">
-                        Score: <span class="score-text"></span>
-                        <div class="score-saved-msg" style="display:none; color:green; margin-top:5px;">Score saved successfully!</div>
-                    </div>
-                     </div>
+                    <!-- generated questions go here -->
+                </div>
             </div>
         </div>
     </div>
@@ -900,15 +847,17 @@
             }
             const auth = firebase.auth();
             const db = firebase.firestore();
-
+            
             auth.onAuthStateChanged(user => {
                 if (user) {
                     if (user.emailVerified) {
                         // User is signed in and email is verified
                         document.getElementById('logoutButton').style.display = 'block';
-                        // Load chats when user is authenticated
+                        // Load chats and quiz history when user is authenticated
                         loadChats(user.uid);
-                        // Removed the call to loadSidebarQuizHistory here
+                        setTimeout(() => {
+                            loadSidebarQuizHistory();
+                        }, 1000); // Slight delay to ensure UI is ready
                     } else {
                         // Email not verified, sign out and redirect
                         auth.signOut().then(() => {
@@ -925,9 +874,8 @@
         auth.onAuthStateChanged(user => {
             if (user) {
                 if (user.emailVerified) {
-                    // Load chats when user is authenticated
+                    // Load chats and quiz history when user is authenticated
                     loadChats(user.uid);
-                    // Removed the call to loadSidebarQuizHistory here
                 } else {
                     auth.signOut().then(() => {
                         window.location.href = '/';
@@ -999,7 +947,7 @@
                     const chatTitleEl = document.getElementById('chatTitle');
                     chatTitleEl.textContent = chat.filename || `Chat ${chatId}`;
                     chatTitleEl.setAttribute('data-chat-id', chatId);
-
+                    
                     const contentDiv = document.getElementById('chatContent');
                     contentDiv.innerHTML = '';
                     contentDiv.appendChild(createChatDisplay(chat));
@@ -1056,91 +1004,52 @@
         function generateQuiz(encodedQuestions, chatId) {
                 let allQuestions = JSON.parse(decodeURIComponent(encodedQuestions));
 
-                // Shuffle questions (optional, but good for practice)
                 for (let i = allQuestions.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [allQuestions[i], allQuestions[j]] = [allQuestions[j], allQuestions[i]];
                 }
 
-                const qs = allQuestions.slice(0, 10); // Take the first 10 shuffled questions
+                const qs = allQuestions.slice(0, 10); 
                 const section = document.querySelector('.question-section');
-
+                
                 // Store the chat ID for reference when saving scores
                 section.dataset.chatId = chatId;
 
-                // Clear previous content and add the quiz history button and structure
-                // The button is placed here, at the very beginning of the .question-section's content.
-                // This will position it on the left, below the header bar.
                 section.innerHTML = `
-                     <button class="toggle-quiz-history-btn" id="toggleQuizHistory">Show Quiz History</button>
-
-                    <div class="quiz-history" id="quizHistoryContent">
-                        <h3>Quiz History</h3>
-                        <div class="quiz-history-content">
-                            <p>Loading score history...</p>
-                        </div>
+                <div class="score-box" style="display:none; background:#f0f0f0; color:black; padding:10px; border:1px solid #ccc; margin-bottom:16px; font-weight:bold;">
+                    Score: <span class="score-text"></span>
+                    <div class="score-saved-msg" style="display:none; color:green; margin-top:5px;">Score saved successfully!</div>
+                </div>
+                <div class="quiz-history" style="display:none; background:#f5f5f5; padding:15px; border-radius:5px; margin-top:20px;">
+                    <h3 style="margin-top:0;">Quiz History</h3>
+                    <div class="quiz-history-content">
+                        <p>Loading score history...</p>
                     </div>
-
-                    <div class="score-box" style="display:none; background:#f0f0f0; color:black; padding:10px; border:1px solid #ccc; margin-bottom:16px; font-weight:bold;">
-                        Score: <span class="score-text"></span>
-                        <div class="score-saved-msg" style="display:none; color:green; margin-top:5px;">Score saved successfully!</div>
-                    </div>
-                     `;
-
-                // Append questions to the section
-                // A container for questions might be useful, or just append directly
-                 qs.forEach((q, i) => {
-                    const questionDiv = document.createElement('div');
-                    questionDiv.className = 'question';
-                    questionDiv.dataset.correct = q.correct_answer;
-                    questionDiv.innerHTML = `
-                        <p><strong>Q${i + 1}:</strong> ${q.question}</p>
-                        <div class="options">
-                            ${['a','b','c','d'].map((opt, index) => {
-                                const optionText = q.options[opt] || 'N/A'; // Handle missing options
-                                return `
-                                    <label style="display:block; margin:4px 0;">
-                                        <input type="radio" name="q${i}" value="${opt}">
-                                        <strong>${String.fromCharCode(65 + index)}.</strong> ${optionText}
-                                    </label>
-                                `;
-                            }).join('')}
-                        </div>
-                        <div class="feedback" style="margin-top:8px; font-weight:600;"></div>
-                    `;
-                     section.appendChild(questionDiv); // Append question directly to section
-                 });
-
-                // Add the submit button
-                const submitButton = document.createElement('button');
-                submitButton.textContent = 'Submit Answers';
-                submitButton.className = 'submit-all';
-                submitButton.style = 'margin-top:20px; background-color:#1d3964; color:white; border:none; border-radius:10px; cursor:pointer; font-weight:600; letter-spacing:0.5px; padding:14px 25px; box-shadow: 0 4px 15px rgba(29, 57, 100, 0.3); transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease; will-change: transform, background-color, box-shadow;';
-                section.appendChild(submitButton);
-
-
-                // Load chat-specific quiz history whenever a quiz is generated
-                loadQuizHistory(); // This will load history into #quizHistoryContent
-
-                // Add event listener for the toggle button
-                document.getElementById('toggleQuizHistory').addEventListener('click', toggleQuizHistory);
-
-                document.querySelector('.question-mode').style.display = 'block';
+                </div>
+                 ${qs.map((q, i) => `
+                <div class="question" data-correct="${q.correct_answer}">
+                <p><strong>Q${i + 1}:</strong> ${q.question}</p>
+                <div class="options">
+                    ${['a','b','c','d'].map((opt, index) => `
+                        <label style="display:block; margin:4px 0;">
+                            <input type="radio" name="q${i}" value="${opt}">
+                            <strong>${String.fromCharCode(65 + index)}.</strong> ${q.options[opt]}
+                        </label>
+                    `).join('')}
+                </div>
+                <div class="feedback" style="margin-top:8px; font-weight:600;"></div>
+                </div>
+                `).join('')}
+                <button class="submit-all" style="margin-top:20px; background-color:#1d3964; color:white; border:none; border-radius:10px; cursor:pointer; font-weight:600; letter-spacing:0.5px; padding:14px 25px; box-shadow: 0 4px 15px rgba(29, 57, 100, 0.3); transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease; will-change: transform, background-color, box-shadow;">
+                Submit Answers
+                </button>
+            `;
+   
+            // Load chat-specific quiz history whenever a quiz is generated
+            loadQuizHistory();
+            
+            document.querySelector('.question-mode').style.display = 'block';
             };
-
-        // Function to toggle the visibility of the quiz history section
-        function toggleQuizHistory() {
-            const historyDiv = document.getElementById('quizHistoryContent');
-            const toggleButton = document.getElementById('toggleQuizHistory');
-
-            if (historyDiv.style.display === 'none' || historyDiv.style.display === '') {
-                historyDiv.style.display = 'block';
-                toggleButton.textContent = 'Hide Quiz History';
-            } else {
-                historyDiv.style.display = 'none';
-                toggleButton.textContent = 'Show Quiz History';
-            }
-        }
 
         function createUploadArea(chatId) {
             const uploadDiv = document.createElement('div');
@@ -1176,11 +1085,11 @@
                 alert('Only PDF and TXT files are allowed.');
                 return;
             }
-
+            
             // Set up UI
             document.getElementById('chatTitle').innerHTML = 'Processing<span id="loadingDots"></span>';
             const loadingInterval = animateDots();
-
+            
             // Create progress container
             const progressContainer = document.createElement('div');
             progressContainer.id = 'progressContainer';
@@ -1232,10 +1141,10 @@
 
                         // Process complete chunks (leave last incomplete one in buffer)
                         buffer = chunks.pop() || '';
-
+                        
                         for (const chunk of chunks) {
                             if (!chunk.trim()) continue;
-
+                            
                             try {
                                 const data = JSON.parse(chunk);
                                 console.log('Progress update:', data);
@@ -1273,11 +1182,11 @@
             function updateStep(stepId, status) {
                 const stepElement = document.getElementById(stepId);
                 const statusElement = stepElement.querySelector('.status');
-
+                
                 // Update status text and class
                 statusElement.textContent = status.charAt(0).toUpperCase() + status.slice(1);
                 statusElement.className = 'status ' + status;
-
+                
                 // Update step element class for visual feedback
                 stepElement.classList.remove('pending', 'processing', 'complete', 'error');
                 stepElement.classList.add(status);
@@ -1363,7 +1272,7 @@
         document.getElementById('flipCard').addEventListener('click', flipCard);
         document.getElementById('nextCard').addEventListener('click', nextCard);
         document.getElementById('prevCard').addEventListener('click', prevCard);
-
+        
         // Function to save quiz score to the backend
         async function saveQuizScore() {
             try {
@@ -1372,12 +1281,12 @@
                     console.error('No chat ID available');
                     return;
                 }
-
+                
                 // Update the UI to show saving status
-                const savedMsg = document.querySelector('.score-box .score-saved-msg');
+                const savedMsg = document.querySelector('.score-saved-msg');
                 savedMsg.textContent = 'Saving score...';
                 savedMsg.style.display = 'block';
-
+                
                 // Add all quiz data including questions and answers
                 const scoreData = {
                     chatId: chatId,
@@ -1388,10 +1297,10 @@
                     questions: window.currentQuizData.questions,
                     answers: window.currentQuizData.answers
                 };
-
+                
                 // Get the auth token
                 const token = await auth.currentUser.getIdToken(true);
-
+                
                 // Save the score to the backend
                 const response = await fetch('/save_quiz_score', {
                     method: 'POST',
@@ -1401,20 +1310,20 @@
                     },
                     body: JSON.stringify(scoreData)
                 });
-
+                
                 const data = await response.json();
-
+                
                 if (data.success) {
                     // Show success message
                     savedMsg.textContent = 'Score saved successfully!';
                     savedMsg.style.color = 'green';
-
-                    // Refresh the quiz history in the questions section
+                    
+                    // Refresh the quiz history in both places
                     loadQuizHistory();
-
+                    loadSidebarQuizHistory();
+                    
                     // Show history section
-                    document.getElementById('quizHistoryContent').style.display = 'block';
-                    document.getElementById('toggleQuizHistory').textContent = 'Hide Quiz History'; // Update button text
+                    document.querySelector('.quiz-history').style.display = 'block';
                 } else {
                     console.error('Failed to save score:', data.error);
                     savedMsg.textContent = 'Failed to save score: ' + (data.error || 'Unknown error');
@@ -1422,30 +1331,25 @@
                 }
             } catch (error) {
                 console.error('Error saving quiz score:', error);
-                const savedMsg = document.querySelector('.score-box .score-saved-msg');
-                savedMsg.textContent = 'Error saving score. Try again.';
+                const savedMsg = document.querySelector('.score-saved-msg');
+                savedMsg.textContent = 'Error saving score. Try again.';  
                 savedMsg.style.color = 'red';
                 savedMsg.style.display = 'block';
             }
         }
-
+        
         // Function to load quiz history for the current question section
         async function loadQuizHistory() {
             try {
                 const chatId = document.querySelector('.question-section').dataset.chatId;
                 if (!chatId) {
                     console.error('No chat ID available');
-                    // Hide history section and show no history message if no chat ID
-                    const historyContent = document.querySelector('#quizHistoryContent .quiz-history-content');
-                    historyContent.innerHTML = '<p>No chat selected to load history.</p>';
-                    document.getElementById('quizHistoryContent').style.display = 'none'; // Ensure it's hidden
-                    document.getElementById('toggleQuizHistory').textContent = 'Show Quiz History (0)'; // Update button text
                     return;
                 }
-
+                
                 // Get the auth token
                 const token = await auth.currentUser.getIdToken(true);
-
+                
                 // Get quiz history from the backend
                 const response = await fetch(`/get_quiz_scores/${chatId}`, {
                     method: 'GET',
@@ -1453,16 +1357,16 @@
                         'Authorization': `Bearer ${token}`
                     }
                 });
-
+                
                 const data = await response.json();
-
-                const historyContent = document.querySelector('#quizHistoryContent .quiz-history-content');
-
-
+                
+                const historyDiv = document.querySelector('.quiz-history');
+                const historyContent = document.querySelector('.quiz-history-content');
+                
                 if (data.success && data.scores && data.scores.length > 0) {
                     // Store quiz data globally for download access
                     window.quizHistoryData = data.scores;
-
+                    
                     // Format and display the scores
                     historyContent.innerHTML = `
                         <table style="width:100%; border-collapse:collapse; margin-top:10px;">
@@ -1494,23 +1398,17 @@
                             </tbody>
                         </table>
                     `;
-
-                    // Update the toggle button text with the number of scores
-                    document.getElementById('toggleQuizHistory').textContent = `Show Quiz History (${data.scores.length})`;
-
+                    
                     // Add event listeners to download buttons
-                    // Use event delegation on a parent element that is always present
-                    const historyTable = document.querySelector('#quizHistoryContent table');
-                     if (historyTable) { // Ensure the table exists
-                         historyTable.addEventListener('click', function(event) {
-                            const target = event.target.closest('.download-history-btn');
-                            if (target) {
-                                const index = parseInt(target.getAttribute('data-index'));
+                    setTimeout(() => {
+                        document.querySelectorAll('.download-history-btn').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                const index = parseInt(this.getAttribute('data-index'));
                                 const quizData = window.quizHistoryData[index];
-                                 // Check if questions and answers data are available in the history entry
-                                if (quizData.questions && quizData.answers) {
-                                    const questions = JSON.parse(quizData.questions);
-                                    const answers = JSON.parse(quizData.answers);
+                                const questions = JSON.parse(quizData.questions || '[]');
+                                const answers = JSON.parse(quizData.answers || '[]');
+                                
+                                if (questions.length > 0 && answers.length > 0) {
                                     const resultsText = generateHistoryQuizText(questions, answers, quizData);
                                     const timestamp = new Date(quizData.timestamp).toISOString().replace(/[:.]/g, '-');
                                     const filename = `quiz_history_${timestamp}.txt`;
@@ -1518,35 +1416,127 @@
                                 } else {
                                     alert('Quiz details are not available for this attempt. Only recent quizzes contain downloadable details.');
                                 }
-                            }
+                            });
                         });
-                     }
-
-
-                    // Do NOT display history by default here. The toggle button handles visibility.
-                    // document.getElementById('quizHistoryContent').style.display = 'block'; // Removed
+                    }, 100); // Small delay to ensure DOM is updated
+                    
+                    historyDiv.style.display = 'block';
                 } else {
-                    historyContent.innerHTML = '<p>No previous quiz scores found for this chat.</p>';
-                    // Keep the history div hidden if no history, but ensure the toggle button exists.
-                    document.getElementById('quizHistoryContent').style.display = 'none'; // Ensure it's hidden if no history
-                    document.getElementById('toggleQuizHistory').textContent = 'Show Quiz History (0)'; // Update button text
+                    historyContent.innerHTML = '<p>No previous quiz scores found.</p>';
+                    historyDiv.style.display = 'block';
                 }
             } catch (error) {
                 console.error('Error loading quiz history:', error);
-                const historyContent = document.querySelector('#quizHistoryContent .quiz-history-content');
+                const historyContent = document.querySelector('.quiz-history-content');
                 historyContent.innerHTML = '<p>Failed to load quiz history.</p>';
-                 document.getElementById('quizHistoryContent').style.display = 'none'; // Hide on error
-                 document.getElementById('toggleQuizHistory').textContent = 'Show Quiz History (Error)'; // Update button text
             }
         }
-
-        // The loadSidebarQuizHistory function is no longer needed, removing it.
-        /*
+        
+        // Function to load quiz history for the sidebar
         async function loadSidebarQuizHistory() {
-            // ... (function code removed)
+            try {
+                // Get all chats for the current user to get all quiz scores
+                const token = await auth.currentUser.getIdToken(true);
+                
+                const historySection = document.getElementById('sidebarQuizHistory');
+                let allScores = [];
+                let foundScores = false;
+                
+                // Get all chats first
+                const chatsSnapshot = await db.collection('chats')
+                    .where('userId', '==', auth.currentUser.uid)
+                    .orderBy('timestamp', 'desc')
+                    .get();
+                
+                // Only proceed if we have chats
+                if (!chatsSnapshot.empty) {
+                    // Clear the history container
+                    historySection.innerHTML = '';
+                    
+                    // Create a container for all quiz histories
+                    const quizContainer = document.createElement('div');
+                    
+                    // Get scores for each chat
+                    for (const chatDoc of chatsSnapshot.docs) {
+                        const chatId = chatDoc.id;
+                        const chatData = chatDoc.data();
+                        const chatName = chatData.filename || `Chat ${chatId}`;
+                        
+                        try {
+                            const response = await fetch(`/get_quiz_scores/${chatId}`, {
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`
+                                }
+                            });
+                            
+                            const data = await response.json();
+                            
+                            if (data.success && data.scores && data.scores.length > 0) {
+                                foundScores = true;
+                                
+                                // Add chat info to each score
+                                const scoresWithChatInfo = data.scores.map(score => ({
+                                    ...score,
+                                    chatName,
+                                    chatId
+                                }));
+                                
+                                allScores = [...allScores, ...scoresWithChatInfo];
+                            }
+                        } catch (error) {
+                            console.error(`Error getting scores for chat ${chatId}:`, error);
+                        }
+                    }
+                    
+                    // Sort all scores by date (newest first)
+                    allScores.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    
+                    // Display the 5 most recent scores in the sidebar
+                    const recentScores = allScores.slice(0, 5);
+                    
+                    if (recentScores.length > 0) {
+                        recentScores.forEach(score => {
+                            const date = new Date(score.timestamp);
+                            const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                            
+                            const quizItem = document.createElement('div');
+                            quizItem.className = 'sidebar-quiz-item';
+                            quizItem.dataset.chatId = score.chatId;
+                            quizItem.innerHTML = `
+                                <div class="quiz-title">${score.chatName}</div>
+                                <div class="quiz-score">${score.score}/${score.totalQuestions} (${Math.round(score.percentage)}%)</div>
+                                <div class="quiz-date">${formattedDate}</div>
+                            `;
+                            
+                            // Add click event to open the quiz details
+                            quizItem.addEventListener('click', () => {
+                                // Load the chat associated with this quiz
+                                loadChatContent(score.chatId);
+                                
+                                // Open the questions page
+                                setTimeout(() => {
+                                    const questionsBtn = document.querySelector(`.action-buttons .questions-btn[data-chat-id="${score.chatId}"]`);
+                                    if (questionsBtn) {
+                                        questionsBtn.click();
+                                    }
+                                }, 500);
+                            });
+                            
+                            historySection.appendChild(quizItem);
+                        });
+                    } else {
+                        historySection.innerHTML = '<p class="no-quiz-history">No quiz history available.</p>';
+                    }
+                } else {
+                    historySection.innerHTML = '<p class="no-quiz-history">No quiz history available.</p>';
+                }
+            } catch (error) {
+                console.error('Error loading sidebar quiz history:', error);
+                document.getElementById('sidebarQuizHistory').innerHTML = 
+                    '<p class="no-quiz-history">Failed to load quiz history.</p>';
+            }
         }
-        */
-
         document.querySelector('.close-flashcards').addEventListener('click', () => {
             document.querySelector('.flashcard-mode').style.display = 'none';
         });
@@ -1567,101 +1557,82 @@
 
         document.querySelector('.close-questions').addEventListener('click', () => {
             document.querySelector('.question-mode').style.display = 'none';
-            // Clear any previously displayed scores and history when closing the question mode
+            // Clear any previously displayed scores but keep history in sidebar
             document.querySelector('.score-box').style.display = 'none';
-            document.getElementById('quizHistoryContent').style.display = 'none'; // Hide the history section
-             // Clear the question section content when closing
-            document.querySelector('.question-section').innerHTML = '';
         });
 
         // Function to generate quiz results text content for immediate download after quiz completion
-        // This function is now deprecated since history is saved and downloadable from history.
-        // Keeping it in case it's used elsewhere, but its primary use is replaced by download from history.
         function generateQuizResultsText() {
-            const allQuestions = document.querySelectorAll('.question-section .question'); // Select questions within the section
+            const allQuestions = document.querySelectorAll('.question');
             const chatTitle = document.getElementById('chatTitle').textContent;
             const dateStr = new Date().toLocaleString();
             const score = window.currentQuizData.score;
             const totalQuestions = window.currentQuizData.totalQuestions;
             const percentage = window.currentQuizData.percentage;
-
+            
             let content = `Quiz Results - ${chatTitle}\n`;
             content += `Date: ${dateStr}\n`;
             content += `Score: ${score} / ${totalQuestions} (${percentage}%)\n\n`;
             content += `QUESTIONS AND ANSWERS:\n\n`;
-
+            
             allQuestions.forEach((card, index) => {
                 const question = card.querySelector('p').textContent;
                 const correct = card.dataset.correct;
                 const selected = card.querySelector('input[type=radio]:checked');
                 const correctLetter = String.fromCharCode(correct.charCodeAt(0) - 32); // Convert a→A, b→B, etc.
                 const selectedLetter = selected ? String.fromCharCode(selected.value.charCodeAt(0) - 32) : 'None';
-                 const correctOptionInput = card.querySelector(`input[value="${correct}"]`);
-                 let correctText = 'N/A';
-                 if (correctOptionInput && correctOptionInput.parentElement) {
-                     correctText = correctOptionInput.parentElement.textContent.trim().substring(correctOptionInput.parentElement.textContent.indexOf(' ') + 1);
-                 }
-
-
+                const correctText = card.querySelector(`input[value="${correct}"]`).parentElement.textContent.trim();
+                const correctAnswer = correctText.substring(correctText.indexOf(' ') + 1);
+                
                 let selectedAnswer = 'Not answered';
                 if (selected) {
-                     const selectedOptionInput = card.querySelector(`input[value="${selected.value}"]`);
-                     if (selectedOptionInput && selectedOptionInput.parentElement) {
-                         selectedAnswer = selectedOptionInput.parentElement.textContent.trim().substring(selectedOptionInput.parentElement.textContent.indexOf(' ') + 1);
-                     }
+                    const selectedText = selected.parentElement.textContent.trim();
+                    selectedAnswer = selectedText.substring(selectedText.indexOf(' ') + 1);
                 }
-
+                
                 const isCorrect = selected && selected.value === correct;
-
+                
                 content += `Question ${index + 1}: ${question.replace(/^Q\d+:\s*/, '')}\n`;
                 content += `Your answer: ${selectedLetter}. ${selectedAnswer}\n`;
                 content += `Correct answer: ${correctLetter}. ${correctAnswer}\n`;
                 content += `Result: ${isCorrect ? 'Correct' : 'Incorrect'}\n\n`;
             });
-
+            
             return content;
         }
-
+        
         // Function to generate quiz results text from saved history
         function generateHistoryQuizText(questions, answers, quizData) {
-            const chatTitle = document.getElementById('chatTitle').textContent; // Note: This will be the title of the currently loaded chat, not necessarily the chat when the quiz was taken
-            const date = new Date(quizData.timestamp);
-            const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const chatTitle = document.getElementById('chatTitle').textContent;
+            const dateStr = new Date(quizData.timestamp).toLocaleString();
             const score = quizData.score;
             const totalQuestions = quizData.totalQuestions;
             const percentage = quizData.percentage;
-
+            
             let content = `Quiz Results - ${chatTitle}\n`;
-            content += `Date: ${formattedDate}\n`;
+            content += `Date: ${dateStr}\n`;
             content += `Score: ${score} / ${totalQuestions} (${percentage}%)\n\n`;
             content += `QUESTIONS AND ANSWERS:\n\n`;
-
-            // Ensure we process up to the minimum number of questions/answers available
-            const numItems = Math.min(questions.length, answers.length);
-
-            for (let i = 0; i < numItems; i++) {
-                const question = questions[i];
-                const answer = answers[i];
-
-                const correctLetter = question.correct_answer ? String.fromCharCode(question.correct_answer.charCodeAt(0) - 32) : 'N/A'; // Convert a→A, b→B, etc.
-                const selectedLetter = answer.selected ? String.fromCharCode(answer.selected.charCodeAt(0) - 32) : 'Not Answered';
-
-                const correctAnswer = (question.options && question.options[question.correct_answer]) || 'N/A';
-                const selectedAnswer = (answer.selected && question.options && question.options[answer.selected]) || (answer.selected ? 'N/A (Option missing)' : 'Not Answered');
-
-
+            
+            questions.forEach((question, index) => {
+                if (index >= answers.length) return; // Skip if no matching answer
+                
+                const answer = answers[index];
+                const correctLetter = String.fromCharCode(question.correct_answer.charCodeAt(0) - 32); // Convert a→A, b→B, etc.
+                const selectedLetter = String.fromCharCode(answer.selected.charCodeAt(0) - 32);
+                const correctAnswer = question.options[question.correct_answer];
+                const selectedAnswer = question.options[answer.selected];
                 const isCorrect = answer.selected === question.correct_answer;
-
-                content += `Question ${i + 1}: ${question.question}\n`;
+                
+                content += `Question ${index + 1}: ${question.question}\n`;
                 content += `Your answer: ${selectedLetter}. ${selectedAnswer}\n`;
                 content += `Correct answer: ${correctLetter}. ${correctAnswer}\n`;
                 content += `Result: ${isCorrect ? 'Correct' : 'Incorrect'}\n\n`;
-            }
-
+            });
+            
             return content;
         }
-
-
+        
         // Function to download text as a file
         function downloadTextFile(text, filename) {
             const blob = new Blob([text], { type: 'text/plain' });
@@ -1676,19 +1647,16 @@
         }
 
         document.querySelector('.question-section').addEventListener('click', e => {
-            // Check if the clicked element or its ancestor is the submit button
-            const submitButton = e.target.closest('.submit-all');
-            if (!submitButton) return; // Exit if it's not the submit button
-
-            const allQuestions = document.querySelectorAll('.question-section .question'); // Select questions within the section
+            if (!e.target.classList.contains('submit-all')) return;
+            const allQuestions = document.querySelectorAll('.question');
             let score = 0;
             let allAnswered = true;
-
+            
             // First check if all questions have been answered
             allQuestions.forEach(card => {
                 const selected = card.querySelector('input[type=radio]:checked');
                 const feedback = card.querySelector('.feedback');
-
+                
                 if (!selected) {
                     feedback.textContent = '⚠️ Please answer this question.';
                     feedback.style.color = 'orange';
@@ -1698,19 +1666,19 @@
                     feedback.textContent = '';
                 }
             });
-
+            
             // If not all questions are answered, don't proceed
             if (!allAnswered) {
                 alert('Please answer all questions before submitting.');
                 return;
             }
-
+            
             // If all questions are answered, grade the quiz
             allQuestions.forEach(card => {
                 const correct = card.dataset.correct;
                 const selected = card.querySelector('input[type=radio]:checked');
                 const feedback = card.querySelector('.feedback');
-
+                
                 if (selected.value === correct) {
                     feedback.textContent = '✅ Correct!';
                     feedback.style.color = 'green';
@@ -1718,65 +1686,56 @@
                 } else {
                     // Convert lowercase option letter to uppercase using ASCII code conversion (a→A, b→B, etc.)
                     const correctLetter = String.fromCharCode(correct.charCodeAt(0) - 32); // Convert a→A, b→B, etc.
-                    const correctOptionInput = card.querySelector(`input[value="${correct}"]`);
-                    let correctText = '';
-                     if (correctOptionInput && correctOptionInput.parentElement) {
-                          correctText = correctOptionInput.parentElement.textContent.trim().substring(correctOptionInput.parentElement.textContent.indexOf(' ') + 1);
-                     }
-                    feedback.innerHTML = `❌ Incorrect. Correct answer: <span style="color:green;">${correctLetter}. ${correctText}</span>`;
+                    const correctText = card.querySelector(`input[value="${correct}"]`).parentElement.textContent.trim();
+                    feedback.innerHTML = `❌ Incorrect. Correct answer: <span style="color:green;">${correctLetter}. ${correctText.substring(correctText.indexOf(' ') + 1)}</span>`;
                     feedback.style.color = 'red';
                 }
-
+                
                 // Disable inputs after submission
                 const inputs = card.querySelectorAll('input[type=radio]');
                 inputs.forEach(input => input.disabled = true);
             });
-
+            
             // Show score results
             const scoreBox = document.querySelector('.score-box');
             const scoreText = document.querySelector('.score-text');
             scoreText.textContent = `${score} / ${allQuestions.length}`;
             scoreBox.style.display = 'block';
-            submitButton.disabled = true; // Disable the clicked submit button
-
-
+            e.target.disabled = true;
+            
             // Gather questions and answers for storage
             const quizQuestions = [];
             const quizAnswers = [];
-
+            
             allQuestions.forEach((card, idx) => {
                 // Extract the original question object (question, options, correct_answer)
                 const questionText = card.querySelector('p').textContent.replace(/^Q\d+:\s*/, '');
                 const correct = card.dataset.correct;
                 const selected = card.querySelector('input[type=radio]:checked');
                 const selectedValue = selected ? selected.value : null;
-
+                
                 // Get all options
                 const options = {};
-                // Need to handle the case where options are not 'a', 'b', 'c', 'd' - assuming they are for now.
                 ['a', 'b', 'c', 'd'].forEach(opt => {
-                    const inputElement = card.querySelector(`input[value="${opt}"]`);
-                     if (inputElement && inputElement.parentElement) {
-                         const optionText = inputElement.parentElement.textContent.trim().substring(inputElement.parentElement.textContent.indexOf(' ') + 1);
-                         options[opt] = optionText;
-                     }
+                    const optionEl = card.querySelector(`input[value="${opt}"]`).parentElement;
+                    const optionText = optionEl.textContent.trim().substring(optionEl.textContent.indexOf(' ') + 1);
+                    options[opt] = optionText;
                 });
-
-
+                
                 // Store question
                 quizQuestions.push({
                     question: questionText,
                     options: options,
                     correct_answer: correct
                 });
-
+                
                 // Store answer
                 quizAnswers.push({
                     selected: selectedValue || '',
                     correct: selectedValue === correct
                 });
             });
-
+            
             // Save current score data for later use
             window.currentQuizData = {
                 score: score,
@@ -1786,10 +1745,10 @@
                 questions: JSON.stringify(quizQuestions),
                 answers: JSON.stringify(quizAnswers)
             };
-
+            
             // Save score automatically without requiring a button click
             saveQuizScore();
-
+            
             // Replace submit button with a "New Quiz" button
             const newQuizBtn = document.createElement('button');
             newQuizBtn.textContent = 'Try Another Quiz';
@@ -1798,27 +1757,20 @@
             newQuizBtn.addEventListener('click', () => {
                 // Reset the quiz with new questions
                 const chatId = document.querySelector('.question-section').dataset.chatId;
-                // Find the correct questions-btn to get the encoded questions data
-                const questionsBtn = document.querySelector(`.action-buttons .questions-btn[data-chat-id="${chatId}"]`);
-                 if (chatId && questionsBtn) {
-                     const encodedQuestions = questionsBtn.getAttribute('data-content');
-                     generateQuiz(encodedQuestions, chatId);
-                 } else {
-                     console.error('Could not find questions button for chat ID:', chatId);
-                 }
+                const encodedQuestions = document.querySelector('.questions-btn').getAttribute('data-content');
+                if (chatId && encodedQuestions) {
+                    generateQuiz(encodedQuestions, chatId);
+                }
             });
-
-
-            // Replace the submit button with the new quiz button
-            submitButton.parentNode.replaceChild(newQuizBtn, submitButton);
-
+            
+            // Replace the submit button
+            e.target.parentNode.replaceChild(newQuizBtn, e.target);
+            
             // Explicitly show the quiz history section
-            document.getElementById('quizHistoryContent').style.display = 'block'; // Show history after submission
-             document.getElementById('toggleQuizHistory').textContent = 'Hide Quiz History'; // Update button text
-
-            // Load and display score history (already done in saveQuizScore, but call again for clarity)
-            // loadQuizHistory(); // Removed redundant call as saveQuizScore already calls it
-
+            document.querySelector('.quiz-history').style.display = 'block';
+            
+            // Load and display score history
+            loadQuizHistory();
         });
 
         document.addEventListener('keydown', (e) => {
@@ -1835,24 +1787,21 @@
                 }
             }
         });
-
-        // Add hover effect to submit button (event delegation)
-        document.addEventListener('mouseover', (e) => {
+        
+        // Add hover effect to submit button
+        document.addEventListener('click', (e) => {
             if (e.target.classList.contains('submit-all')) {
-                 e.target.style.transform = 'translateY(-2px)';
-                 e.target.style.boxShadow = '0 6px 18px rgba(29, 57, 100, 0.4)';
-                 e.target.style.backgroundColor = '#2a4c7d';
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 6px 18px rgba(29, 57, 100, 0.4)';
+                e.target.style.backgroundColor = '#2a4c7d';
+                
+                setTimeout(() => {
+                    e.target.style.transform = '';
+                    e.target.style.boxShadow = '';
+                    e.target.style.backgroundColor = '';
+                }, 300);
             }
         });
-
-         document.addEventListener('mouseout', (e) => {
-            if (e.target.classList.contains('submit-all') && !e.target.disabled) {
-                 e.target.style.transform = '';
-                 e.target.style.boxShadow = '';
-                 e.target.style.backgroundColor = ''; // Reset to original or defined in CSS
-            }
-        });
-
 
         document.getElementById('newChatButton').addEventListener('click', () => {
             const chatList = document.getElementById('chatList');
