@@ -891,7 +891,7 @@ def test_upload_cleanup_os_remove_exception(mock_os_remove, client, tmp_path, ca
     assert json_lines[-1] == {"status": "complete", "chatId": chat_id}
 
     # Assert os.remove was called (and raised exception)
-    mock_os_remove.assert_called_once_with(str(expected_filepath))
+    mock_os_remove.assert_called_once_with(str(expected_filepath)) # Verify file deletion
     # Assert AI cleanup still attempted
     mock_ai_features_instance_obj.delete_all_files.assert_called_once()
 
@@ -1063,7 +1063,6 @@ def test_save_score_no_json_body(client):
     assert response.status_code == 400 # Werkzeug raises BadRequest
     assert "Failed to decode JSON object" in response.json.get("error", "") or \
            "browser (or proxy) sent a request" in response.json.get("error", "")
-
 
 def test_save_score_bad_json_format(client):
     mock_auth_verify()
@@ -1324,7 +1323,7 @@ def test_get_scores_empty_token(client):
     assert response.json['error'] == 'Invalid token format: Token cannot be empty.'
 
 def test_get_scores_invalid_token(client):
-    error_msg = "Bad Token Signature Get Scores"; token = "invalid_get_token"
+    error_msg = "Bad Token Signature Get Scores"; token="invalid_get_token"
     mock_auth_verify(should_fail=True, exception_type=MockInvalidIdTokenError, exception_msg=error_msg, token_to_check=token)
     response = client.get(f'/get_quiz_scores/any_chat_id', headers=create_auth_header(token))
     assert response.status_code == 401
@@ -1553,10 +1552,6 @@ def test_get_scores_firestore_get_exception(client):
     # Verify get was attempted
     mock_doc_ref_chat.get.assert_called_once()
 
-# test_app.py
-
-# ... (inside test suite)
-
 def test_save_score_invalid_question_answer_type(client):
     """
     Covers lines ~357-358: Tests sending non-list data for questions/answers.
@@ -1593,7 +1588,239 @@ def test_save_score_invalid_question_answer_type(client):
     score_entry_in_chat = call_args_update[0]['quiz_scores'][0]
     assert 'questions' not in score_entry_in_chat
     assert 'answers' not in score_entry_in_chat
+
+def test_upload_file_generate_aiquestions_exception(client):
+    """Test handling of exception in AIQuestions during generate function"""
+    user_id = TEST_USER_ID
+    mock_auth_verify(user_id=user_id)
     
+    # Setup the file upload
+    test_file = BytesIO(b"Test content for upload")
+    test_file.filename = "test.txt"
+    
+    # Configure mock AIQuestions to raise an exception during generate
+    mock_ai_questions_instance_obj.generate_content.side_effect = Exception("AIQuestions generate error")
+    
+    # Make the request
+    response = client.post(
+        '/upload',
+        data={'file': (test_file, 'test.txt'), 'chatId': 'test_chat_id', 'type': 'questions'},
+        headers=create_auth_header(),
+        content_type='multipart/form-data'
+    )
+    
+    # Check the response
+    assert response.status_code == 500
+    assert "error" in response.json
+    assert "AIQuestions generate error" in response.json["error"]
+
+def test_upload_file_generate_aiflashcards_exception(client):
+    """Test handling of exception in AIFlashcards during generate function"""
+    user_id = TEST_USER_ID
+    mock_auth_verify(user_id=user_id)
+    
+    # Setup the file upload
+    test_file = BytesIO(b"Test content for upload")
+    test_file.filename = "test.txt"
+    
+    # Configure mock AIFlashcards to raise an exception during generate
+    mock_ai_flashcards_instance_obj.generate_content.side_effect = Exception("AIFlashcards generate error")
+    
+    # Make the request
+    response = client.post(
+        '/upload',
+        data={'file': (test_file, 'test.txt'), 'chatId': 'test_chat_id', 'type': 'flashcards'},
+        headers=create_auth_header(),
+        content_type='multipart/form-data'
+    )
+    
+    # Check the response
+    assert response.status_code == 500
+    assert "error" in response.json
+    assert "AIFlashcards generate error" in response.json["error"]
+
+def test_upload_file_generate_aisummary_exception(client):
+    """Test handling of exception in AISummary during generate function"""
+    user_id = TEST_USER_ID
+    mock_auth_verify(user_id=user_id)
+    
+    # Setup the file upload
+    test_file = BytesIO(b"Test content for upload")
+    test_file.filename = "test.txt"
+    
+    # Configure mock AISummary to raise an exception during generate
+    mock_ai_summary_instance_obj.generate_content.side_effect = Exception("AISummary generate error")
+    
+    # Make the request
+    response = client.post(
+        '/upload',
+        data={'file': (test_file, 'test.txt'), 'chatId': 'test_chat_id', 'type': 'summary'},
+        headers=create_auth_header(),
+        content_type='multipart/form-data'
+    )
+    
+    # Check the response
+    assert response.status_code == 500
+    assert "error" in response.json
+    assert "AISummary generate error" in response.json["error"]
+
+def test_save_quiz_score_empty_quiz_scores(client):
+    """Test saving a quiz score when chat exists but has empty quiz_scores"""
+    user_id = TEST_USER_ID
+    chat_id = 'chat_empty_scores'
+    new_score_id = 'new_score_empty_scores'
+    
+    mock_auth_verify(user_id=user_id)
+    configure_firestore_add(collection_name='quiz_scores', new_doc_id=new_score_id)
+    
+    # Configure chat to exist with empty quiz_scores field
+    configure_firestore_get(
+        chat_exists=True, 
+        user_id=user_id, 
+        doc_data={'user_id': user_id, 'quiz_scores': []}
+    )
+    configure_firestore_update()
+    
+    score_data = {
+        'chatId': chat_id,
+        'score': 8,
+        'totalQuestions': 10,
+        'percentage': 80.0,
+        'quizDate': '2024-05-09',
+        'questions': ["Q1", "Q2"],
+        'answers': ["A1", "A2"]
+    }
+    
+    response = client.post('/save_quiz_score', headers=create_auth_header(), json=score_data)
+    
+    assert response.status_code == 200
+    assert response.json['success'] is True
+    assert response.json['scoreId'] == new_score_id
+    
+    # Verify update was called with the correct data
+    mock_doc_ref_chat.update.assert_called_once()
+
+def test_save_quiz_score_missing_quiz_scores(client):
+    """Test saving a quiz score when chat exists but has no quiz_scores field"""
+    user_id = TEST_USER_ID
+    chat_id = 'chat_missing_scores_field'
+    new_score_id = 'new_score_missing_field'
+    
+    mock_auth_verify(user_id=user_id)
+    configure_firestore_add(collection_name='quiz_scores', new_doc_id=new_score_id)
+    
+    # Configure chat to exist but with no quiz_scores field
+    configure_firestore_get(
+        chat_exists=True, 
+        user_id=user_id, 
+        doc_data={'user_id': user_id}  # No quiz_scores field
+    )
+    configure_firestore_update()
+    
+    score_data = {
+        'chatId': chat_id,
+        'score': 7,
+        'totalQuestions': 10,
+        'percentage': 70.0,
+        'quizDate': '2024-05-09',
+        'questions': ["Q1", "Q2"],
+        'answers': ["A1", "A2"]
+    }
+    
+    response = client.post('/save_quiz_score', headers=create_auth_header(), json=score_data)
+    
+    assert response.status_code == 200
+    assert response.json['success'] is True
+    assert response.json['scoreId'] == new_score_id
+    
+    # Verify update was called with a new quiz_scores array
+    mock_doc_ref_chat.update.assert_called_once()
+
+def test_get_quiz_scores_empty_scores_array(client):
+    """Test get_quiz_scores with an empty scores array in the document"""
+    user_id = TEST_USER_ID
+    chat_id = 'chat_empty_scores_get'
+    
+    mock_auth_verify(user_id=user_id)
+    
+    # Configure chat to exist with empty quiz_scores field
+    configure_firestore_get(
+        chat_exists=True, 
+        user_id=user_id, 
+        doc_data={'user_id': user_id, 'quiz_scores': []}
+    )
+    
+    response = client.get(f'/get_quiz_scores/{chat_id}', headers=create_auth_header())
+    
+    assert response.status_code == 200
+    assert response.json['success'] is True
+    assert response.json['scores'] == []
+
+def test_get_quiz_scores_missing_scores_field(client):
+    """Test get_quiz_scores when the quiz_scores field is missing"""
+    user_id = TEST_USER_ID
+    chat_id = 'chat_missing_scores_field_get'
+    
+    mock_auth_verify(user_id=user_id)
+    
+    # Configure chat to exist but with no quiz_scores field
+    configure_firestore_get(
+        chat_exists=True, 
+        user_id=user_id, 
+        doc_data={'user_id': user_id}  # No quiz_scores field
+    )
+    
+    response = client.get(f'/get_quiz_scores/{chat_id}', headers=create_auth_header())
+    
+    assert response.status_code == 200
+    assert response.json['success'] is True
+    assert response.json['scores'] == []
+
+def test_get_quiz_scores_invalid_percentage_values(client):
+    """Test get_quiz_scores with invalid percentage values"""
+    user_id = TEST_USER_ID
+    chat_id = 'chat_invalid_percentage'
+    
+    mock_auth_verify(user_id=user_id)
+    
+    # Create scores with invalid percentage values
+    scores = [
+        {
+            'scoreId': 'score_none_percentage',
+            'score': 5,
+            'totalQuestions': 10,
+            'percentage': None,
+            'timestamp': '2024-05-09T12:00:00Z',
+            'questions_json': '[]',
+            'answers_json': '[]'
+        },
+        {
+            'scoreId': 'score_string_percentage',
+            'score': 8,
+            'totalQuestions': 10,
+            'percentage': 'not-a-number',
+            'timestamp': '2024-05-09T14:00:00Z',
+            'questions_json': '[]',
+            'answers_json': '[]'
+        }
+    ]
+    
+    configure_firestore_get(
+        chat_exists=True, 
+        user_id=user_id, 
+        scores=scores
+    )
+    
+    response = client.get(f'/get_quiz_scores/{chat_id}', headers=create_auth_header())
+    
+    assert response.status_code == 200
+    assert response.json['success'] is True
+    assert len(response.json['scores']) == 2
+    
+    # Check that invalid percentages were converted to 0.0
+    for score in response.json['scores']:
+        assert score['percentage'] == 0.0
+
 # --- Stop Global Patchers (Session Scoped) ---
 @pytest.fixture(scope="session", autouse=True)
 def stop_global_patchers(request):

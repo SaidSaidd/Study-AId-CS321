@@ -525,3 +525,199 @@ def test_fixture_txt_file_not_exists(temp_file):
     # print(f"[Test {os.getpid()}] Result: {os.path.exists(temp_file)}") # Debug
     assert not os.path.exists(temp_file)
     assert temp_file.endswith('.txt')
+
+
+@pytest.mark.parametrize("ai_features", [{'file_path': None}], indirect=True)
+def test_aifeatures_delete_all_files_with_exception_during_delete(ai_features):
+    """Test AIFeatures.delete_all_files handling when individual file deletion fails"""
+    # Setup multiple files
+    mock_file1 = MagicMock(name='file1')
+    mock_file1.name = 'file1'
+    mock_file2 = MagicMock(name='file2') 
+    mock_file2.name = 'file2'
+    
+    # Make the first delete fail with exception, second should still be attempted
+    ai_features._mock_files_api.delete.side_effect = [Exception("Delete failed"), None]
+    ai_features._mock_files_api.list.return_value = [mock_file1, mock_file2]
+    
+    # Function should not raise exception
+    count = ai_features.delete_all_files()
+    
+    # Only one file successfully deleted
+    assert count == 1
+    assert ai_features._mock_files_api.delete.call_count == 2
+
+def test_aifeatures_missing_client():
+    """Test AIFeatures methods when client is not set"""
+    # Create AI features without a client
+    ai_features = AIFeatures("dummy_key", "test.pdf")
+    ai_features.client = None
+    
+    # Each method should raise a ValueError
+    with pytest.raises(ValueError, match="Client is not set"):
+        ai_features.upload_file()
+        
+    with pytest.raises(ValueError, match="Client is not set"):
+        ai_features.generate_content()
+        
+    with pytest.raises(ValueError, match="Client is not set"):
+        ai_features.delete_all_files()
+
+def test_aifeatures_invalid_file_type():
+    """Test AIFeatures with invalid file type (not pdf or txt)"""
+    with pytest.raises(ValueError, match="Only PDF and TXT files are allowed"):
+        AIFeatures("dummy_key", "test.doc")
+
+@pytest.mark.parametrize("ai_features", [{}], indirect=True)
+def test_aiquestions_parse_output_no_question_indicators(ai_features):
+    """Test AIQuestions.parse_output with content that lacks question indicators"""
+    # Create AIQuestions instance
+    ai_questions = AIQuestions(ai_features)
+    
+    # Test with content that doesn't have the expected format
+    content = "This is just regular text with no questions or answers."
+    result = ai_questions.parse_output(content)
+    
+    # Should return an empty list
+    assert result == []
+
+@pytest.mark.parametrize("ai_features", [{}], indirect=True)
+def test_aiquestions_parse_output_complex_format(ai_features):
+    """Test AIQuestions.parse_output with a more complex format"""
+    ai_questions = AIQuestions(ai_features)
+    
+    # Test with content that has a more complex format
+    content = """
+    Question 1: What is Python?
+    A) A programming language
+    B) A snake
+    C) Both A and B
+    D) None of the above
+    Answer: C
+    
+    Question 2: What does HTML stand for?
+    a. Hyper Text Markup Language
+    b. High Tech Multi Language
+    c. Hyper Transfer Markup Language
+    d. None of these
+    Answer: a
+    """
+    
+    result = ai_questions.parse_output(content)
+    
+    # Check result
+    assert len(result) == 2
+    assert result[0]['question'] == "What is Python?"
+    assert result[0]['options'] == ["A programming language", "A snake", "Both A and B", "None of the above"]
+    assert result[0]['answer'] == "C"
+    
+    assert result[1]['question'] == "What does HTML stand for?"
+    assert result[1]['options'] == ["Hyper Text Markup Language", "High Tech Multi Language", "Hyper Transfer Markup Language", "None of these"]
+    assert result[1]['answer'] == "a"
+
+@pytest.mark.parametrize("ai_features", [{}], indirect=True)
+def test_aiflashcards_create_dict_empty_input(ai_features):
+    """Test AIFlashcards.create_dict with empty input"""
+    ai_flashcards = AIFlashcards(ai_features)
+    
+    result = ai_flashcards.create_dict("")
+    
+    # Should return an empty dictionary
+    assert result == {}
+
+@pytest.mark.parametrize("ai_features", [{}], indirect=True)
+def test_aiflashcards_create_dict_weird_format(ai_features):
+    """Test AIFlashcards.create_dict with unusual input format"""
+    ai_flashcards = AIFlashcards(ai_features)
+    
+    weird_content = """
+    Word without definition
+    
+    Definition without word:
+    This is a definition without a proper word
+    
+    Word with multiple colons: first part: second part:
+    This has multiple colons
+    """
+    
+    result = ai_flashcards.create_dict(weird_content)
+    
+    # Should still parse what it can
+    assert "Word with multiple colons" in result
+    assert result["Word with multiple colons"] == "first part: second part:\nThis has multiple colons"
+
+@pytest.mark.parametrize("ai_features", [{}], indirect=True)
+def test_aisummary_parse_sections_multiple_sections_with_subsections(ai_features):
+    """Test AISummary.parse_sections with multiple sections including subsections"""
+    ai_summary = AISummary(ai_features)
+    
+    content = """
+    # Main Title
+    Introduction text
+    
+    ## Section 1
+    Content of section 1
+    
+    ### Subsection 1.1
+    Content of subsection 1.1
+    
+    ## Section 2
+    Content of section 2
+    """
+    
+    result = ai_summary.parse_sections(content)
+    
+    # Should have parsed the sections correctly
+    assert len(result) == 3
+    assert "1" in result
+    assert "2" in result
+    assert "3" in result
+    assert result["1"]["title"] == "Main Title"
+    assert "Introduction text" in result["1"]["content"]
+    assert result["2"]["title"] == "Section 1"
+    assert "Content of section 1" in result["2"]["content"]
+    assert "Subsection 1.1" in result["2"]["content"]
+    assert result["3"]["title"] == "Section 2"
+    assert "Content of section 2" in result["3"]["content"]
+
+@pytest.mark.parametrize("ai_features", [{}], indirect=True)
+def test_aisummary_format_for_display_empty_content(ai_features):
+    """Test AISummary.format_for_display with empty content"""
+    ai_summary = AISummary(ai_features)
+    
+    result = ai_summary.format_for_display("")
+    
+    # Should handle empty content
+    assert result == ""
+
+@pytest.mark.parametrize("ai_features", [{}], indirect=True)
+def test_aisummary_format_for_display_complex_content(ai_features):
+    """Test AISummary.format_for_display with complex content"""
+    ai_summary = AISummary(ai_features)
+    
+    content = """# Title
+Some text
+## Section 1
+Section 1 content
+## Section 2
+Section 2 content
+### Subsection 2.1
+Subsection content"""
+    
+    expected = """# Title
+
+Some text
+## Section 1
+
+Section 1 content
+## Section 2
+
+Section 2 content
+### Subsection 2.1
+
+Subsection content"""
+    
+    result = ai_summary.format_for_display(content)
+    
+    # Should format properly
+    assert result == expected
