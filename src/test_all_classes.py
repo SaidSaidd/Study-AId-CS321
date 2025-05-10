@@ -22,7 +22,7 @@ except ImportError:
     from .AIQuestions import AIQuestions
 
 # Use a dummy API key for testing
-API_KEY = 'dummy_api_key'
+API_KEY = 'AIzaSyCFP_xnzpKf8FBn7Nl1cqOU682IicQykLg'
 
 # Create a temporary test file fixture (parameterized)
 @pytest.fixture

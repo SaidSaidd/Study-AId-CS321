@@ -201,7 +201,7 @@ def upload_file():
             yield json.dumps({"step": "overview", "status": "processing"}) + "\n\n"
             # Ensure API key is handled securely (e.g., environment variable)
             # Hardcoding keys is not recommended for production.
-            api_key = os.environ.get("YOUR_API_KEY_ENV_VAR", "YOUR_API_KEY_HERE") # Example: Get from Env
+            api_key = "AIzaSyCFP_xnzpKf8FBn7Nl1cqOU682IicQykLg"  # Use the actual API key
             ai_features = AIFeatures(api_key, local_file_path)
             overview = ai_features.generate_content()
             print("Step: Overview - Complete", flush=True)
@@ -394,16 +394,28 @@ def save_quiz_score():
             "quizDate": quiz_date # Use validated quiz date
         }
 
-        # Store questions and answers if available and are lists
-        questions_data = data.get('questions')
-        if questions_data is not None: # Check for presence before type
-             if isinstance(questions_data, list): # pragma: no cover
-                  score_data["questions"] = questions_data
+        # Store questions and answers if available and are valid JSON strings representing lists
+        questions_data_str = data.get('questions')
+        if questions_data_str and isinstance(questions_data_str, str):
+            try:
+                parsed_questions = json.loads(questions_data_str)
+                if isinstance(parsed_questions, list):
+                    score_data["questions"] = parsed_questions
+                else:
+                    print(f"Save Score Warning: 'questions' field was a JSON string but did not decode to a list: {questions_data_str}", flush=True) # pragma: no cover
+            except json.JSONDecodeError:
+                print(f"Save Score Warning: 'questions' field was not a valid JSON string: {questions_data_str}", flush=True) # pragma: no cover
 
-        answers_data = data.get('answers')
-        if answers_data is not None: # Check for presence before type
-             if  isinstance(answers_data, list): # pragma: no cover
-                  score_data["answers"] = answers_data
+        answers_data_str = data.get('answers')
+        if answers_data_str and isinstance(answers_data_str, str):
+            try:
+                parsed_answers = json.loads(answers_data_str)
+                if isinstance(parsed_answers, list):
+                    score_data["answers"] = parsed_answers
+                else:
+                    print(f"Save Score Warning: 'answers' field was a JSON string but did not decode to a list: {answers_data_str}", flush=True) # pragma: no cover
+            except json.JSONDecodeError:
+                print(f"Save Score Warning: 'answers' field was not a valid JSON string: {answers_data_str}", flush=True) # pragma: no cover
 
         # --- Save score to 'quiz_scores' collection ---
         print(f"Adding score to 'quiz_scores' collection for chat {chat_id}...", flush=True)
@@ -533,6 +545,19 @@ def get_quiz_scores(chat_id):
             scores = [] # Return empty list if data is corrupted
 
         print(f"Found {len(scores)} scores in chat document.", flush=True)
+        
+        # Enhanced debugging for each score
+        for i, score in enumerate(scores):
+            print(f"\n===== DEBUG SCORE #{i+1} =====")
+            print(f"Score type: {type(score)}")
+            if isinstance(score, dict):
+                for key, value in score.items():
+                    value_type = type(value)
+                    value_preview = str(value)[:50] + '...' if len(str(value)) > 50 else str(value)
+                    print(f"Key: {key}, Type: {value_type}, Value: {value_preview}")
+            else:
+                print(f"Non-dict score: {score}")
+            print(f"=========================\n")
 
         # Apply defaults and prepare for sorting (handle missing timestamps/types)
         processed_scores = []
@@ -543,17 +568,50 @@ def get_quiz_scores(chat_id):
                   continue # Skip non-dict items
 
              # Apply defaults for missing fields safely
+             # Get questions and answers (either lists or already strings)
+             questions_data = score.get('questions', [])
+             answers_data = score.get('answers', [])
+             
+             # Try to convert string questions/answers to proper lists
+             # Check if it's a string that looks like a JSON array
+             if isinstance(questions_data, str) and questions_data.strip().startswith('['):
+                 try:
+                     questions_data = json.loads(questions_data)
+                     print(f"Parsed questions string to list, length: {len(questions_data)}", flush=True)
+                 except json.JSONDecodeError:
+                     print(f"Failed to parse questions string: {questions_data[:50]}...", flush=True)
+                     questions_data = []
+                     
+             if isinstance(answers_data, str) and answers_data.strip().startswith('['):
+                 try:
+                     answers_data = json.loads(answers_data)
+                     print(f"Parsed answers string to list, length: {len(answers_data)}", flush=True)
+                 except json.JSONDecodeError:
+                     print(f"Failed to parse answers string: {answers_data[:50]}...", flush=True)
+                     answers_data = []
+             
+             # Always convert to proper Python lists (not JSON strings) for frontend
+             if isinstance(questions_data, list) and questions_data:
+                 questions_list = questions_data  # Keep as Python list
+             else:
+                 questions_list = []
+                 
+             if isinstance(answers_data, list) and answers_data:
+                 answers_list = answers_data  # Keep as Python list
+             else:
+                 answers_list = []
+                 
              processed_score = {
                  'scoreId': score.get('scoreId'), # Allow None if missing
                  'score': score.get('score', 0),
                  'totalQuestions': score.get('totalQuestions', 0),
                  'percentage': score.get('percentage', 0.0),
                  'timestamp': score.get('timestamp', ''), # Default timestamp to empty string for sorting
-                 # Ensure Q/A default to list/empty structure suitable for JSON if needed by frontend
-                 'questions': score.get('questions', []), # Default to empty list
-                 'answers': score.get('answers', [])   # Default to empty list
+                 # Send lists directly to the frontend (not as JSON strings)
+                 'questions': questions_list,
+                 'answers': answers_list,
                  # Add quizDate if it's stored and needed by frontend
-                 # 'quizDate': score.get('quizDate', '')
+                 'quizDate': score.get('quizDate', '')
              }
              # Ensure percentage is float, default to 0.0 on error
              try:

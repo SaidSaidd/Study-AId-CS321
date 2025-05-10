@@ -2,8 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Study-AId</title>
+    <title>Study-AId - Updated</title>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -757,6 +760,7 @@
                 <button id="newChatButton">Upload New File</button>
                 <button id="logoutButton">Logout</button>
             </div>
+
             <div class="content">
                 <h2 id="chatTitle">Select a chat or upload a new file</h2>
                 <div id="chatContent"></div>
@@ -1359,13 +1363,44 @@
                 });
                 
                 const data = await response.json();
+                console.log('Quiz history data received:', data);
                 
                 const historyDiv = document.querySelector('.quiz-history');
                 const historyContent = document.querySelector('.quiz-history-content');
                 
-                if (data.success && data.scores && data.scores.length > 0) {
-                    // Store quiz data globally for download access
-                    window.quizHistoryData = data.scores;
+                if (data.scores && data.scores.length > 0) {
+                    // Store the raw scores data
+                    window.originalQuizData = JSON.parse(JSON.stringify(data.scores));
+                    
+                    // Process and store quiz data globally for download access
+                    window.quizHistoryData = data.scores.map(score => {
+                        // Make a copy of the score object
+                        const processedScore = {...score};
+                        
+                        // Process questions if they exist as a string
+                        if (typeof score.questions === 'string' && score.questions.trim().startsWith('[')) {
+                            try {
+                                processedScore.questions = JSON.parse(score.questions);
+                                console.log(`Parsed questions string to array, length: ${processedScore.questions.length}`);
+                            } catch (e) {
+                                console.error('Failed to parse questions string:', e);
+                                processedScore.questions = []; // Reset to empty array on error
+                            }
+                        }
+                        
+                        // Process answers if they exist as a string
+                        if (typeof score.answers === 'string' && score.answers.trim().startsWith('[')) {
+                            try {
+                                processedScore.answers = JSON.parse(score.answers);
+                                console.log(`Parsed answers string to array, length: ${processedScore.answers.length}`);
+                            } catch (e) {
+                                console.error('Failed to parse answers string:', e);
+                                processedScore.answers = []; // Reset to empty array on error
+                            }
+                        }
+                        
+                        return processedScore;
+                    });
                     
                     // Format and display the scores
                     historyContent.innerHTML = `
@@ -1382,15 +1417,35 @@
                                 ${data.scores.map((score, index) => {
                                     const date = new Date(score.timestamp);
                                     const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                                    
+                                    // Check if we have detailed quiz data for this score
+                                    const processedQuiz = window.quizHistoryData[index];
+                                    const hasDetailedData = processedQuiz && 
+                                                          processedQuiz.questions && 
+                                                          Array.isArray(processedQuiz.questions) && 
+                                                          processedQuiz.questions.length > 0;
+                                    
+                                    // Add different styling or title based on data availability
+                                    const downloadStyle = hasDetailedData ? 
+                                        "background:#34a853; color:white;" : 
+                                        "background:#4285f4; color:white;";
+                                    
+                                    const tooltipText = hasDetailedData ? 
+                                        "Download detailed quiz results with questions and answers" : 
+                                        "Download quiz summary";
+                                    
                                     return `
                                         <tr>
                                             <td style="padding:8px; border-bottom:1px solid #eee;">${formattedDate}</td>
                                             <td style="padding:8px; border-bottom:1px solid #eee;">${score.score} / ${score.totalQuestions}</td>
                                             <td style="padding:8px; border-bottom:1px solid #eee;">${Math.round(score.percentage)}%</td>
                                             <td style="padding:8px; border-bottom:1px solid #eee; text-align:center;">
-                                                <button class="download-history-btn" data-index="${index}" style="background:#34a853; color:white; border:none; border-radius:4px; padding:4px 8px; cursor:pointer;">
+                                                <a href="javascript:void(0)" 
+                                                   onclick="downloadQuizSummary(${index})" 
+                                                   title="${tooltipText}"
+                                                   style="${downloadStyle} border:none; border-radius:4px; padding:4px 8px; cursor:pointer; display:inline-block; text-decoration:none;">
                                                     <span style="font-size:0.9em;">Download</span>
-                                                </button>
+                                                </a>
                                             </td>
                                         </tr>
                                     `;
@@ -1399,36 +1454,17 @@
                         </table>
                     `;
                     
-                    // Add event listeners to download buttons
-                    setTimeout(() => {
-                        document.querySelectorAll('.download-history-btn').forEach(btn => {
-                            btn.addEventListener('click', function() {
-                                const index = parseInt(this.getAttribute('data-index'));
-                                const quizData = window.quizHistoryData[index];
-                                const questions = JSON.parse(quizData.questions || '[]');
-                                const answers = JSON.parse(quizData.answers || '[]');
-                                
-                                if (questions.length > 0 && answers.length > 0) {
-                                    const resultsText = generateHistoryQuizText(questions, answers, quizData);
-                                    const timestamp = new Date(quizData.timestamp).toISOString().replace(/[:.]/g, '-');
-                                    const filename = `quiz_history_${timestamp}.txt`;
-                                    downloadTextFile(resultsText, filename);
-                                } else {
-                                    alert('Quiz details are not available for this attempt. Only recent quizzes contain downloadable details.');
-                                }
-                            });
-                        });
-                    }, 100); // Small delay to ensure DOM is updated
-                    
+                    // All the table HTML is complete, no need for additional event listeners here
                     historyDiv.style.display = 'block';
                 } else {
-                    historyContent.innerHTML = '<p>No previous quiz scores found.</p>';
+                    // No scores found
+                    historyContent.innerHTML = '<p>No quiz history available for this session.</p>';
                     historyDiv.style.display = 'block';
                 }
             } catch (error) {
                 console.error('Error loading quiz history:', error);
                 const historyContent = document.querySelector('.quiz-history-content');
-                historyContent.innerHTML = '<p>Failed to load quiz history.</p>';
+                historyContent.innerHTML = `<p class="error">Error loading quiz history: ${error.message}</p>`;
             }
         }
         
@@ -1601,6 +1637,24 @@
             return content;
         }
         
+        // Function to generate a simple quiz summary when detailed data isn't available
+        function generateSimpleQuizSummary(quizData) {
+            const chatTitle = document.getElementById('chatTitle').textContent;
+            const dateStr = new Date(quizData.timestamp).toLocaleString();
+            const score = quizData.score;
+            const totalQuestions = quizData.totalQuestions;
+            const percentage = quizData.percentage || Math.round((score / totalQuestions) * 100);
+            
+            let content = `Quiz Results - ${chatTitle}\n`;
+            content += `Date: ${dateStr}\n`;
+            content += `Score: ${score} / ${totalQuestions} (${percentage}%)\n\n`;
+            content += `Note: Detailed questions and answers are not available for this quiz attempt.\n`;
+            content += `This is a summary of your quiz performance.\n\n`;
+            content += `Thank you for using Study-AId!\n`;
+            
+            return content;
+        }
+        
         // Function to generate quiz results text from saved history
         function generateHistoryQuizText(questions, answers, quizData) {
             const chatTitle = document.getElementById('chatTitle').textContent;
@@ -1631,6 +1685,144 @@
             });
             
             return content;
+        }
+        
+        // Global function to download quiz summary without any conditions
+        function downloadQuizSummary(index) {
+            // Get the quiz data
+            const quizData = window.quizHistoryData[index];
+            console.log('DOWNLOADING QUIZ DATA:', quizData);
+            
+            // Create basic content
+            const chatTitle = document.getElementById('chatTitle').textContent;
+            const dateStr = new Date(quizData.timestamp).toLocaleString();
+            const score = quizData.score || 0;
+            const totalQuestions = quizData.totalQuestions || 0;
+            const percentage = Math.round((score / totalQuestions) * 100);
+            
+            let content = `Quiz Results - ${chatTitle}\n`;
+            content += `Date: ${dateStr}\n`;
+            content += `Score: ${score} / ${totalQuestions} (${percentage}%)\n\n`;
+            content += `QUESTIONS AND ANSWERS:\n\n`;
+            
+            let questions = quizData.questions || [];
+            let answers = quizData.answers || [];
+            
+            // Print out what we received from the backend
+            console.log('Questions type:', typeof questions, Array.isArray(questions));
+            console.log('Answers type:', typeof answers, Array.isArray(answers));
+            
+            // Display the quiz details if we have questions and answers
+            if (Array.isArray(questions) && questions.length > 0 && 
+                Array.isArray(answers) && answers.length > 0) {
+                
+                questions.forEach((question, index) => {
+                    if (index >= answers.length) return; // Skip if we don't have a matching answer
+                    
+                    const answer = answers[index];
+                    
+                    try {
+                        // Extract the question text
+                        const questionText = question.question || 'Unknown question';
+                        content += `Question ${index + 1}: ${questionText}\n`;
+                        
+                        // Display all options with UPPERCASE labels (A, B, C, D)
+                        if (question.options && typeof question.options === 'object') {
+                            Object.keys(question.options).forEach(key => {
+                                // Always use uppercase letters for options (A-D, not a-d)
+                                const letter = key.toUpperCase();
+                                content += `${letter}. ${question.options[key]}\n`;
+                            });
+                        }
+                        
+                        // Get the selected answer
+                        let selectedText = 'Not answered';
+                        let selectedLetter = '';
+                        
+                        if (answer && answer.selected) {
+                            // Always display uppercase letters
+                            selectedLetter = answer.selected.toUpperCase();
+                            selectedText = question.options && question.options[answer.selected] ? 
+                                          question.options[answer.selected] : 'Unknown';
+                        }
+                        
+                        // Get the correct answer
+                        let correctText = 'Unknown';
+                        let correctLetter = '';
+                        
+                        if (question.correct_answer) {
+                            // Always display uppercase letters
+                            correctLetter = question.correct_answer.toUpperCase();
+                            correctText = question.options && question.options[question.correct_answer] ? 
+                                         question.options[question.correct_answer] : 'Unknown';
+                        }
+                        
+                        // Was the answer correct?
+                        let isCorrect = false;
+                        if (answer.correct !== undefined) {
+                            // If we have an explicit correct flag, use that
+                            isCorrect = answer.correct;
+                        } else if (answer.selected && question.correct_answer) {
+                            // Otherwise compare selected with correct_answer
+                            isCorrect = answer.selected.toLowerCase() === question.correct_answer.toLowerCase();
+                        }
+                        
+                        // Add answer info to the content
+                        content += `Your answer: ${selectedLetter}. ${selectedText}\n`;
+                        content += `Correct answer: ${correctLetter}. ${correctText}\n`;
+                        content += `Result: ${isCorrect ? 'Correct' : 'Incorrect'}\n\n`;
+                    } catch (error) {
+                        // If there was an error processing this question, show a basic entry
+                        content += `Question ${index + 1}: Error processing this question\n`;
+                        content += `Error: ${error.message}\n\n`;
+                    }
+                });
+            } else {
+                // We don't have proper question/answer data - load the raw data instead
+                content += `Your quiz score was: ${score}/${totalQuestions} (${percentage}%)\n\n`;
+                content += `Unfortunately, detailed question and answer information is not available for this quiz attempt.\n`;
+                
+                // Try to get some raw data directly from the backend response
+                const rawData = window.originalQuizData ? window.originalQuizData[index] : null;
+                if (rawData && rawData.questions) {
+                    try {
+                        let rawQuestions;
+                        if (typeof rawData.questions === 'string') {
+                            rawQuestions = JSON.parse(rawData.questions);
+                        } else {
+                            rawQuestions = rawData.questions;
+                        }
+                        
+                        if (Array.isArray(rawQuestions) && rawQuestions.length > 0) {
+                            content += `\nThe quiz contained questions such as:\n`;
+                            rawQuestions.forEach((q, i) => {
+                                if (i < 3) { // Just show a few questions as examples
+                                    content += `- ${q.question || 'Unknown question'}\n`;
+                                }
+                            });
+                        }
+                    } catch (e) {
+                        console.error('Error parsing raw questions:', e);
+                    }
+                }
+            }
+            
+            content += `\nThank you for using Study-AId!\n`;
+            
+            // Create filename with timestamp
+            const timestamp = new Date(quizData.timestamp).toISOString().replace(/[:.]/g, '-');
+            const filename = `quiz_results_${timestamp}.txt`;
+            
+            // Create and trigger download
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
         
         // Function to download text as a file
